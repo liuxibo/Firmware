@@ -35,9 +35,17 @@
 # System utility library
 #
 
-SRCS		 = \
-		   perf_counter.c \
-		   param/param.c \
+ifeq ($(PX4_TARGET_OS),qurt)
+SRCS		=  param/param_shmem.c 
+else
+ifeq ($(CONFIG_SHMEM),1)
+SRCS		=  param/param_shmem.c 
+else
+SRCS		=  param/param.c 
+endif
+endif
+
+SRCS		+= perf_counter.c \
 		   conversions.c \
 		   cpuload.c \
 		   pid/pid.c \

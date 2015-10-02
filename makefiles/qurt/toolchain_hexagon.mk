@@ -127,7 +127,7 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD) \
 			    -I$(HEXAGON_SDK_ROOT)/inc/stddef \
 			    -Wno-error=shadow
 
-
+ARCHDEFINES		+= -DENABLE_SHMEM
 
 # optimisation flags
 #

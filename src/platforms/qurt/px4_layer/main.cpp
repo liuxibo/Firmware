@@ -46,6 +46,7 @@
 #include <string>
 #include <map>
 #include <stdio.h>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -154,6 +155,42 @@ extern void init_once(void);
 __BEGIN_DECLS
 extern int dspal_main(int argc, char *argv[]);
 __END_DECLS
+
+
+#define COMMANDS_ADSP_FILE	"/dev/fs/px4.config"
+
+const char *get_commands()
+{
+	int fd = open(COMMANDS_ADSP_FILE, O_RDONLY);
+
+	if(fd>0)
+	{
+		static char *commands;
+		char buf[4096];
+		int bytes_read, total_bytes=0;
+		PX4_INFO("reading commands from %s\n", COMMANDS_ADSP_FILE);
+		do{
+			bytes_read = read(fd, (void*)buf, sizeof(buf));
+			if(bytes_read>0)
+			{
+				commands=(char*)realloc(commands, total_bytes+bytes_read);
+				memcpy(commands+total_bytes, buf, bytes_read);
+				total_bytes += bytes_read;
+			}
+		}while((unsigned int)bytes_read>0);
+		close(fd);
+
+		return (const char*)commands;
+	}
+	
+	PX4_ERR("Could not open %s\n", COMMANDS_ADSP_FILE);
+
+	static const char *commands =
+		"uorb start\n"
+		;
+
+	return commands;
+}
 
 
 int dspal_entry( int argc, char* argv[] )

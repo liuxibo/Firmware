@@ -7,5 +7,6 @@
 #
 CONFIG_ARCH			 = CORTEXA8
 CONFIG_BOARD			 = EAGLE
+CONFIG_SHMEM			 = 1
 
 include $(PX4_MK_DIR)/posix-arm/toolchain_gnu-arm-linux-gnueabihf.mk

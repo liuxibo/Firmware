@@ -97,6 +97,10 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD) \
 			   -I$(PX4_BASE)/mavlink/include/mavlink \
 			   -Wno-error=shadow
 
+ifeq ($(CONFIG_SHMEM),1)
+ARCHDEFINES		+= -DENABLE_SHMEM
+endif
+
 # optimisation flags
 #
 ARCHOPTIMIZATION	 = $(MAXOPTIMIZATION) \

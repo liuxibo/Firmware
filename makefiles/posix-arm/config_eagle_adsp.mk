@@ -32,6 +32,7 @@ MODULES		+= modules/mavlink
 MODULES		+= modules/systemlib
 MODULES		+= modules/uORB
 MODULES		+= modules/dataman
+MODULES		+= modules/commander
 
 #
 # Libraries

@@ -123,7 +123,7 @@ qurt_fixup:
 
 restore:
 	cd src/lib/eigen && git checkout .
-	git submodule update
+	git submodule update src/lib/eigen
 	
 #
 # Versioning

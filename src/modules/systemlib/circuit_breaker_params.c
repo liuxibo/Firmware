@@ -44,6 +44,8 @@
 
 #include <px4.h>
 
+#ifdef __PX4_QURT
+
 /**
  * Circuit breaker for power supply check
  *
@@ -136,3 +138,5 @@ PARAM_DEFINE_INT32(CBRK_ENGINEFAIL, 284953);
  * @group Circuit Breaker
  */
 PARAM_DEFINE_INT32(CBRK_GPSFAIL, 240024);
+
+#endif

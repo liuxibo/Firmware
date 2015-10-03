@@ -76,6 +76,7 @@ PARAM_DEFINE_INT32(MAV_COMP_ID, 1);
  */
 PARAM_DEFINE_INT32(MAV_RADIO_ID, 0);
 
+#ifdef __PX4_QURT
 /**
  * MAVLink airframe type
  *
@@ -83,6 +84,7 @@ PARAM_DEFINE_INT32(MAV_RADIO_ID, 0);
  * @group MAVLink
  */
 PARAM_DEFINE_INT32(MAV_TYPE, 1);
+#endif
 
 /**
  * Use/Accept HIL GPS message even if not in HIL mode

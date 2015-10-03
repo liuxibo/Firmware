@@ -95,6 +95,7 @@ int do_mag_calibration(int mavlink_fd)
 {
 	mavlink_and_console_log_info(mavlink_fd, CAL_QGC_STARTED_MSG, sensor_name);
 
+#if 0
 	struct mag_scale mscale_null = {
 		0.0f,
 		1.0f,
@@ -103,6 +104,7 @@ int do_mag_calibration(int mavlink_fd)
 		0.0f,
 		1.0f,
 	};
+#endif
 
 	int result = OK;
 	
@@ -116,6 +118,7 @@ int do_mag_calibration(int mavlink_fd)
 	}
 	
 	for (unsigned cur_mag = 0; cur_mag < max_mags; cur_mag++) {
+#if 0
 		// Reset mag id to mag not available
 		(void)sprintf(str, "CAL_MAG%u_ID", cur_mag);
 		result = param_set_no_notification(param_find(str), &(device_ids[cur_mag]));
@@ -123,7 +126,17 @@ int do_mag_calibration(int mavlink_fd)
 			mavlink_and_console_log_info(mavlink_fd, "[cal] Unable to reset CAL_MAG%u_ID", cur_mag);
 			break;
 		}
+#else
+		(void)sprintf(str, "CAL_MAG%u_ID", cur_mag);
+		result = param_get(param_find(str), &(device_ids[cur_mag]));
+		if (result != OK) {
+			mavlink_and_console_log_info(mavlink_fd, "[cal] Unable to reset CAL_MAG%u_ID", cur_mag);
+			break;
+		}
+#endif
 
+/*for calibration, commander will run on apps, so orb messages are used to get info from dsp*/
+#if 0
 		// Attempt to open mag
 		(void)sprintf(str, "%s%u", MAG_BASE_DEVICE_PATH, cur_mag);
 		int fd = px4_open(str, O_RDONLY);
@@ -153,6 +166,7 @@ int do_mag_calibration(int mavlink_fd)
 		}
 
 		px4_close(fd);
+#endif
 	}
 
 	// Calibrate all mags at the same time
@@ -591,8 +605,10 @@ calibrate_return mag_calibrate_all(int mavlink_fd, int32_t (&device_ids)[max_mag
 					bool failed = false;
 					
 					/* set parameters */
+#if 0
 					(void)sprintf(str, "CAL_MAG%u_ID", cur_mag);
 					failed |= (OK != param_set_no_notification(param_find(str), &(device_ids[cur_mag])));
+#endif
 					(void)sprintf(str, "CAL_MAG%u_XOFF", cur_mag);
 					failed |= (OK != param_set_no_notification(param_find(str), &(mscale.x_offset)));
 					(void)sprintf(str, "CAL_MAG%u_YOFF", cur_mag);

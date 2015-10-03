@@ -384,7 +384,13 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	};
 
 	/* wait for initial baro value */
+#ifdef __PX4_QURT
+	// WARNING skipping
+	PX4_WARN("Hacked to skip baro initialization for testing.");
+	bool wait_baro = false;
+#else
 	bool wait_baro = true;
+#endif
 
 	thread_running = true;
 

@@ -171,8 +171,10 @@ typedef struct  {
 
 int do_accel_calibration(int mavlink_fd)
 {
+#if 0
 	int fd;
 	int32_t device_id[max_accel_sens];
+#endif
 
 	mavlink_and_console_log_info(mavlink_fd, CAL_QGC_STARTED_MSG, sensor_name);
 
@@ -189,6 +191,7 @@ int do_accel_calibration(int mavlink_fd)
 
 	char str[30];
 
+#if 0
 	/* reset all sensors */
 	for (unsigned s = 0; s < max_accel_sens; s++) {
 		sprintf(str, "%s%u", ACCEL_BASE_DEVICE_PATH, s);
@@ -208,6 +211,7 @@ int do_accel_calibration(int mavlink_fd)
 			mavlink_and_console_log_critical(mavlink_fd, CAL_ERROR_RESET_CAL_MSG, s);
 		}
 	}
+#endif
 
 	float accel_offs[max_accel_sens][3];
 	float accel_T[max_accel_sens][3][3];
@@ -272,14 +276,17 @@ int do_accel_calibration(int mavlink_fd)
 		failed |= (OK != param_set_no_notification(param_find(str), &(accel_scale.y_scale)));
 		(void)sprintf(str, "CAL_ACC%u_ZSCALE", i);
 		failed |= (OK != param_set_no_notification(param_find(str), &(accel_scale.z_scale)));
+#if 0
 		(void)sprintf(str, "CAL_ACC%u_ID", i);
 		failed |= (OK != param_set_no_notification(param_find(str), &(device_id[i])));
+#endif
 		
 		if (failed) {
 			mavlink_and_console_log_critical(mavlink_fd, CAL_ERROR_SET_PARAMS_MSG, i);
 			return ERROR;
 		}
 
+#if 0
 		sprintf(str, "%s%u", ACCEL_BASE_DEVICE_PATH, i);
 		fd = px4_open(str, 0);
 
@@ -294,6 +301,7 @@ int do_accel_calibration(int mavlink_fd)
 		if (res != OK) {
 			mavlink_and_console_log_critical(mavlink_fd, CAL_ERROR_APPLY_CAL_MSG, i);
 		}
+#endif
 	}
 
 	if (res == OK) {

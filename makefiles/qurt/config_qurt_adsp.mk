@@ -3,6 +3,7 @@
 ifndef HEXAGON_DRIVERS_ROOT
 $(error HEXAGON_DRIVERS_ROOT is not set)
 endif
+EAGLE_DRIVERS_SRC?=drivers
 ifndef EAGLE_DRIVERS_SRC
 $(error EAGLE_DRIVERS_SRC is not set)
 endif

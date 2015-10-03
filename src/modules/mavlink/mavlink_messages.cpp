@@ -418,7 +418,9 @@ protected:
 							fputs("\n", fp);
 						}
 						else {
+#if 0
 							warn("Failed to open %s errno=%d", log_file_path, errno);
+#endif
 						}
 					}
 				}

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2013-2015 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2015 Mark Charlebois. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,85 +31,23 @@
  *
  ****************************************************************************/
 
-/*
- * @file system_params.c
+/**
+ * @file rc_receiver_params.c
  *
- * System wide parameters
+ * Parameters defined by the rc_receiver driver
  */
 
 #include <px4_config.h>
 #include <systemlib/param/param.h>
 
-#ifdef __PX4_QURT
-
 /**
- * Auto-start script index.
+ * RC receiver type
  *
- * Defines the auto-start script used to bootstrap the system.
+ * Acceptable values:
  *
- * @group System
+ * - RC_RECEIVER_SPEKTRUM = 1,
+ * - RC_RECEIVER_LEMONRX = 2,
+ *
+ * @group RC Receiver Configuration
  */
-PARAM_DEFINE_INT32(SYS_AUTOSTART, 0);
-
-/**
- * Automatically configure default values.
- *
- * Set to 1 to reset parameters on next system startup (setting defaults).
- * Platform-specific values are used if available.
- * RC* parameters are preserved.
- *
- * @min 0
- * @max 1
- * @group System
- */
-PARAM_DEFINE_INT32(SYS_AUTOCONFIG, 0);
-
-/**
-* Set usage of IO board
-*
-* Can be used to use a standard startup script but with a FMU only set-up. Set to 0 to force the FMU only set-up.
-*
-* @min 0
-* @max 1
-* @group System
-*/
-PARAM_DEFINE_INT32(SYS_USE_IO, 1);
-
-/**
-* Set restart type
-*
-* Set by px4io to indicate type of restart
-*
-* @min 0
-* @max 2
-* @group System
-*/
-PARAM_DEFINE_INT32(SYS_RESTART_TYPE, 2);
-
-/**
-* Companion computer interface
-*
-* Configures the baud rate of the companion computer interface.
-* Set to zero to disable, set to these values to enable (NO OTHER VALUES SUPPORTED!)
-* 921600: enables onboard mode at 921600 baud, 8N1. 57600: enables onboard mode at 57600 baud, 8N1.
-* 157600: enables OSD mode at 57600 baud, 8N1.
-*
-* @min 0
-* @max 921600
-* @group System
-*/
-PARAM_DEFINE_INT32(SYS_COMPANION, 0);
-
-/**
-* Parameter version
-*
-* This monotonically increasing number encodes the parameter compatibility set.
-* whenever it increases parameters might not be backwards compatible and
-* ground control stations should suggest a fresh configuration.
-*
-* @min 0
-* @group System
-*/
-PARAM_DEFINE_INT32(SYS_PARAM_VER, 1);
-
-#endif
+PARAM_DEFINE_INT32(RC_RECEIVER_TYPE, 1);

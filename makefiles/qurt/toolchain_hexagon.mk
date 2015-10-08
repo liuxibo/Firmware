@@ -128,6 +128,7 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD) \
 			    -Wno-error=shadow
 
 ARCHDEFINES		+= -DENABLE_SHMEM
+ARCHDEFINES		+= -DEIGEN_MPL2_ONLY
 
 # optimisation flags
 #

@@ -121,6 +121,9 @@ endif
 qurt_fixup:
 	makefiles/qurt/setup.sh $(PX4_BASE)
 
+posix_arm_fixup:
+	makefiles/posix-arm/setup.sh $(PX4_BASE)
+
 restore:
 	cd src/lib/eigen && git checkout .
 	git submodule update src/lib/eigen

@@ -1,8 +1,9 @@
+This patch is needed to enable compiling Eigen with -DEIGEN_MPL2_ONLY flag
+
 diff --git a/Eigen/Eigen b/Eigen/Eigen
-index 654c8dc..19b40ea 100644
+index 654c8dc..f285f80 100644
 --- a/Eigen/Eigen
 +++ b/Eigen/Eigen
-@@ -1,2 +1,2 @@
+@@ -1,2 +1 @@
  #include "Dense"
 -#include "Sparse"
-+//#include "Sparse"

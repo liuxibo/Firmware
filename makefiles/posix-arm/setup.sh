@@ -1,6 +1,6 @@
 ############################################################################
 #
-# Copyright (c) 2015 Mark Charlebois. All rights reserved.
+# Copyright (c) 2015 Ramakrishna Kintada. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,14 +31,8 @@
 #
 # ###########################################################################
 
-#
-# This file is required to modify the PX4 project so it can be build with
-# the Hexagon toolchain.
-#
-# 1. Downgrade Eigen to 3.2 because the C++11 features of latest version
-#    are not supported
-# 2. Patch Eigen because the Hexagon toolchain complex.h defines "I"
-#
+# This file is needed to patch the eigen to allow for using -DEIGEN_MPL2_ONLY
+# flag. This is applicable to the posix-arm only target( ie eagle board ).
 
 cd $1
 cd src/lib/eigen/

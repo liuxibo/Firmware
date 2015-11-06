@@ -53,8 +53,8 @@ int mem_fd;
 unsigned char *map_base, *virt_addr;
 struct shmem_info* shmem_info_p;
 static void* map_memory(off_t target);
-static int get_shmem_lock(void);
-static void release_shmem_lock(void);
+int get_shmem_lock(void);
+void release_shmem_lock(void);
 void init_shared_memory(void);
 void copy_own_params_to_shmem(struct param_info_s *);
 unsigned int copy_other_params_from_shmem(struct param_info_s *);
@@ -63,6 +63,13 @@ uint64_t update_from_shmem_prev_time=0, update_from_shmem_current_time=0;
 static unsigned char krait_changed_index[MAX_SHMEM_PARAMS/8+1];
 static param_t krait_params_count;
 
+struct param_wbuf_s {
+	param_t			param;
+	union param_value_u	val;
+	bool			unsaved;
+};
+extern struct param_wbuf_s * param_find_changed(param_t param);
+
 static void* map_memory(off_t target)
 {
 
@@ -70,7 +77,7 @@ static void* map_memory(off_t target)
 
 }
 
-static int get_shmem_lock(void)
+int get_shmem_lock(void)
 {
 	unsigned char *lock = (unsigned char*)(MAP_ADDRESS+LOCK_OFFSET);
 	unsigned int i=0;
@@ -89,7 +96,7 @@ static int get_shmem_lock(void)
 
 }
 
-static void release_shmem_lock(void)
+void release_shmem_lock(void)
 {
 	unsigned char *lock = (unsigned char*)(MAP_ADDRESS+LOCK_OFFSET);
 
@@ -129,7 +136,11 @@ void copy_own_params_to_shmem(struct param_info_s *param_info_base)
 		shmem_info_p->adsp_params[param].type = param_type(param);
 		strncpy(shmem_info_p->adsp_params[param].name, param_name(param), 28);
 		shmem_info_p->adsp_params[param].name[27]=0;
-		shmem_info_p->adsp_params[param].val = param_info_base[param].val; 
+
+		struct param_wbuf_s *s = param_find_changed(param);
+		if(s==NULL) shmem_info_p->adsp_params[param].val = param_info_base[param].val; 
+		else shmem_info_p->adsp_params[param].val = s->val; 
+
 #ifdef SHMEM_DEBUG
 		if(param_type(param)==PARAM_TYPE_INT32){
 		PX4_INFO("%d: written %d for param %s to shared mem", param, shmem_info_p->adsp_params[param].val.i, shmem_info_p->adsp_params[param].name);}
@@ -179,10 +190,10 @@ unsigned int copy_other_params_from_shmem(struct param_info_s *param_info_base)
 		param_info_base[param].val = shmem_info_p->krait_params[krait_params_count].val;
 #ifdef SHMEM_DEBUG
 		if(param_type(param)==PARAM_TYPE_INT32){
-		{PX4_INFO("%d: read %d for param %s to shared mem", param, shmem_info_p->krait_params[krait_param].val.i, shmem_info_p->krait_params[krait_param].name);}
+		{PX4_INFO("%d: read %d for param %s to shared mem", param, shmem_info_p->krait_params[krait_params_count].val.i, shmem_info_p->krait_params[krait_params_count].name);}
 		}
 		else if(param_type(param)==PARAM_TYPE_FLOAT){
-		{PX4_INFO("%d: read %f for param %s to shared mem", param, shmem_info_p->krait_params[krait_param].val.f, shmem_info_p->krait_params[krait_param].name);}
+		{PX4_INFO("%d: read %f for param %s to shared mem", param, shmem_info_p->krait_params[krait_params_count].val.f, shmem_info_p->krait_params[krait_params_count].name);}
 		}
 		else {PX4_INFO("%d: Unknown param type %d, name %s, val.i %d, val.f %f\n", param, param_info_base[param].type, param_info_base[param].name, param_info_base[param].val.i, param_info_base[param].val.f);}
 #endif

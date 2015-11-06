@@ -109,6 +109,11 @@ const int bits_per_allocation_unit  = (sizeof(*param_changed_storage) * 8);
 
 //#define ENABLE_SHMEM_DEBUG
 
+extern int get_shmem_lock(void);
+extern void release_shmem_lock(void);
+
+struct param_wbuf_s * param_find_changed(param_t param);
+
 unsigned int param_sync_done=0;
 void init_own_params(void);
 unsigned int init_other_params(void);
@@ -129,9 +134,7 @@ unsigned char set_called_from_get=0;
 
 static int param_import_done=0; /*at startup, params are loaded from file, if present. we dont want to send notifications that time since muorb is not ready*/
 
-#ifdef __PX4_QURT
 static int param_load_default_no_notify(void);
-#endif
 
 static unsigned
 get_param_info_count(void)
@@ -232,7 +235,7 @@ param_compare_values(const void *a, const void *b)
  * @return			The structure holding the modified value, or
  *				NULL if the parameter has not been modified.
  */
-static struct param_wbuf_s *
+struct param_wbuf_s *
 param_find_changed(param_t param)
 {
 	struct param_wbuf_s	*s = NULL;
@@ -562,7 +565,7 @@ param_set_internal(param_t param, const void *val, bool mark_saved, bool notify_
 	if(!handle_in_range(param))
 		return result;
 
-	if(!param_sync_done)
+	if(!param_sync_done && param_import_done)
 	{
         	sync_other_current_time = hrt_absolute_time();
         	if((sync_other_current_time - sync_other_prev_time) > 1000000) //try every 1 second
@@ -828,7 +831,10 @@ param_save_default(void)
 
 	const char *filename = param_get_default_file();
 
-	/* write parameters to temp file */
+	if(get_shmem_lock()!=0) {
+		PX4_ERR("Could not get shmem lock\n");
+		return 0;
+	}			
 
 	fd = PARAM_OPEN(filename, O_WRONLY | O_CREAT, PX4_O_MODE_666);
 
@@ -844,6 +850,10 @@ param_save_default(void)
 	}
 
 	PARAM_CLOSE(fd);
+
+	release_shmem_lock();
+
+	PX4_INFO("saving params done\n");
 
 	return res;
 }
@@ -879,21 +889,24 @@ param_load_default(void)
 	return 0;
 }
 
-#ifdef __PX4_QURT
 /**
  * @return 0 on success, 1 if all params have not yet been stored, -1 if device open failed, -2 if writing parameters failed
  */
 static int
 param_load_default_no_notify(void)
 {
-	return 0;
+	if(get_shmem_lock()!=0) {
+		PX4_ERR("Could not get shmem lock\n");
+		return 0;
+	}			
 
 	int fd_load = open(param_get_default_file(), O_RDONLY);
 
 	if (fd_load < 0) {
+		release_shmem_lock();
 		/* no parameter file is OK, otherwise this is an error */
 		if (errno != ENOENT) {
-			warn("open '%s' for reading failed", param_get_default_file());
+			debug("open '%s' for reading failed", param_get_default_file());
 			return -1;
 		}
 
@@ -904,6 +917,10 @@ param_load_default_no_notify(void)
 
 	close(fd_load);
 
+	PX4_INFO("param loading done\n");
+
+	release_shmem_lock();
+
 	if (result != 0) {
 		warn("error reading parameters from '%s'", param_get_default_file());
 		return -2;
@@ -911,7 +928,6 @@ param_load_default_no_notify(void)
 
 	return 0;
 }
-#endif
 
 int
 param_export(int fd, bool only_unsaved)
@@ -950,7 +966,7 @@ param_export(int fd, bool only_unsaved)
 		switch (param_type(s->param)) {
 
 		case PARAM_TYPE_INT32:
-			param_get(s->param, &i);
+			i = s->val.i;
 
 			if (bson_encoder_append_int(&encoder, param_name(s->param), i)) {
 				debug("BSON append failed for '%s'", param_name(s->param));
@@ -960,7 +976,7 @@ param_export(int fd, bool only_unsaved)
 			break;
 
 		case PARAM_TYPE_FLOAT:
-			param_get(s->param, &f);
+			f = s->val.f;
 
 			if (bson_encoder_append_double(&encoder, param_name(s->param), f)) {
 				debug("BSON append failed for '%s'", param_name(s->param));
@@ -1045,6 +1061,7 @@ param_import_callback(bson_decoder_t decoder, void *private, bson_node_t node)
 
 		i = node->i;
 		v = &i;
+		PX4_INFO("Imported %s with value %d\n", param_name(param), i);
 		break;
 
 	case BSON_DOUBLE:
@@ -1055,6 +1072,7 @@ param_import_callback(bson_decoder_t decoder, void *private, bson_node_t node)
 
 		f = node->d;
 		v = &f;
+		PX4_INFO("Imported %s with value %f\n", param_name(param), f);
 		break;
 
 	case BSON_BINDATA:
@@ -1264,14 +1282,12 @@ void init_own_params(void)
 	//copy own params to shared memory
 	init_shared_memory();
 
+	/*load params automatically*/
+	param_load_default_no_notify();
+	param_import_done=1;
+
 	copy_own_params_to_shmem(param_info_base);
 
-#ifdef __PX4_QURT
-	/*load params automatically only from qurt side*/
-	param_load_default_no_notify();
-#endif
-
-	param_import_done=1;
 
 #ifdef ENABLE_SHMEM_DEBUG
 	PX4_INFO("Offsets: \n");

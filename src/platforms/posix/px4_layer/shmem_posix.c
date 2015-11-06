@@ -60,8 +60,8 @@ int mem_fd;
 unsigned char *map_base, *virt_addr;
 struct shmem_info* shmem_info_p;
 static void* map_memory(off_t target);
-static int get_shmem_lock(void);
-static void release_shmem_lock(void);
+int get_shmem_lock(void);
+void release_shmem_lock(void);
 void init_shared_memory(void);
 void copy_own_params_to_shmem(struct param_info_s *);
 unsigned int copy_other_params_from_shmem(struct param_info_s *);
@@ -71,6 +71,13 @@ int update_from_shmem(param_t param, union param_value_u *value);
 uint64_t update_from_shmem_prev_time=0, update_from_shmem_current_time=0;
 static unsigned char adsp_changed_index[MAX_SHMEM_PARAMS/8+1];
 static unsigned int adsp_params_count;
+
+struct param_wbuf_s {
+	param_t			param;
+	union param_value_u	val;
+	bool			unsaved;
+};
+extern struct param_wbuf_s * param_find_changed(param_t param);
 
 #define MEMDEVICE	"/dev/mem"
 
@@ -95,7 +102,7 @@ static void* map_memory(off_t target)
 
 }
 
-static int get_shmem_lock(void)
+int get_shmem_lock(void)
 {
 	int i=0;
 	
@@ -111,7 +118,7 @@ static int get_shmem_lock(void)
 	return 0; //got the lock
 }
 
-static void release_shmem_lock(void)
+void release_shmem_lock(void)
 {
 	*(virt_addr-LOCK_SIZE)=1;
 }
@@ -134,14 +141,16 @@ void copy_own_params_to_shmem(struct param_info_s *param_info_base)
 		PX4_ERR("Could not get shmem lock\n");
 		return;
 	}			
-	//else PX4_INFO("Got lock\n");
 
 	//PX4_INFO("%d krait params allocated\n", param_count());
 	for (param = 0; param<orig_param_info_count; param++) {
 		shmem_info_p->krait_params[param].type = param_type(param);
 		strncpy(shmem_info_p->krait_params[param].name, param_name(param), 28);
 		shmem_info_p->krait_params[param].name[27]=0;
-		shmem_info_p->krait_params[param].val = param_info_base[param].val; 
+
+		struct param_wbuf_s *s = param_find_changed(param);
+		if(s==NULL) shmem_info_p->krait_params[param].val = param_info_base[param].val; 
+		else shmem_info_p->krait_params[param].val = s->val; 
 #ifdef SHMEM_DEBUG
 		if(param_type(param)==PARAM_TYPE_INT32){
 		{PX4_INFO("%d: written %d for param %s to shared mem", param, shmem_info_p->krait_params[param].val.i, shmem_info_p->krait_params[param].name);}
@@ -162,7 +171,6 @@ void copy_own_params_to_shmem(struct param_info_s *param_info_base)
 	}
 
 	release_shmem_lock();
-	//PX4_INFO("Released lock\n");
 }
 
 /*return number of params copied from other proc*/
@@ -175,7 +183,6 @@ unsigned int copy_other_params_from_shmem(struct param_info_s *param_info_base)
 		PX4_ERR("Could not get shmem lock\n");
 		return 0;
 	}			
-	//else PX4_INFO("Got lock\n");
 
 	//read adsp params
 	param = orig_param_info_count;
@@ -189,9 +196,9 @@ unsigned int copy_other_params_from_shmem(struct param_info_s *param_info_base)
 		param_info_base[param].val = shmem_info_p->adsp_params[adsp_params_count].val;
 #ifdef SHMEM_DEBUG 
 		if(param_type(param)==PARAM_TYPE_INT32){
-		PX4_INFO("%d: read %d for param %s to shared mem", param, shmem_info_p->adsp_params[adsp_param].val.i, shmem_info_p->adsp_params[adsp_param].name);}
+		PX4_INFO("%d: read %d for param %s from shared mem", param, shmem_info_p->adsp_params[adsp_params_count].val.i, shmem_info_p->adsp_params[adsp_params_count].name);}
 		else if(param_type(param)==PARAM_TYPE_FLOAT){
-		PX4_INFO("%d: read %f for param %s to shared mem", param, shmem_info_p->adsp_params[adsp_param].val.f, shmem_info_p->adsp_params[adsp_param].name);}
+		PX4_INFO("%d: read %f for param %s from shared mem", param, shmem_info_p->adsp_params[adsp_params_count].val.f, shmem_info_p->adsp_params[adsp_params_count].name);}
 #endif
 	}
 	else /*reset other side's counter also*/
@@ -207,7 +214,6 @@ unsigned int copy_other_params_from_shmem(struct param_info_s *param_info_base)
 	//PX4_INFO("%u adsp params in shared memory\n", shmem_info_p->adsp_params_count);
 
 	release_shmem_lock();
-	//PX4_INFO("Released lock\n");
 
 	return adsp_params_count;
 

@@ -41,6 +41,7 @@
 #include <px4_getopt.h>
 
 #include <uORB/uORB.h>
+#include <uORB/topics/parameter_update.h>
 #include <drivers/drv_accel.h>
 #include <drivers/drv_gyro.h>
 #include <drivers/drv_mag.h>
@@ -82,6 +83,7 @@ static struct mpu9x50_data _data;
 static orb_advert_t _gyro_pub = nullptr;	/**< gyro data publication */
 static orb_advert_t _accel_pub = nullptr;	/**< accelerameter data publication */
 static orb_advert_t _mag_pub = nullptr;		/**< compass data publication */
+static int _params_sub;										/**< parameter update subscription */
 static struct gyro_report _gyro;					/**< gyro report */
 static struct accel_report _accel;				/**< accel report */
 static struct mag_report _mag;						/**< mag report */
@@ -152,6 +154,9 @@ static void parameters_update();
 /** initialize all parameter handles and load the initial parameter values */
 static void parameters_init();
 
+/** poll parameter update */
+static void parameter_update_poll();
+
 static int64_t _isr_data_ready_timestamp = 0;
 
 /**
@@ -174,6 +179,19 @@ void *data_ready_isr(void *context)
 	return NULL;
 }
 
+void parameter_update_poll()
+{
+	bool updated;
+
+	/* Check if parameters have changed */
+	orb_check(_params_sub, &updated);
+
+	if (updated) {
+		struct parameter_update_s param_update;
+		orb_copy(ORB_ID(parameter_update), _params_sub, &param_update);
+		parameters_update();
+	}
+}
 
 void parameters_update()
 {
@@ -478,6 +496,9 @@ void task_main(int argc, char *argv[])
 		goto exit;
 	}
 
+	// subscribe to parameter_update topic
+	_params_sub = orb_subscribe(ORB_ID(parameter_update));
+
 	// initialize signal
 	sigemptyset(&set);
 	sigaddset(&set, SIGRTMIN);
@@ -503,6 +524,9 @@ void task_main(int argc, char *argv[])
 		// Note: This is ok for MPU sample rate of < 1000; Higer than 1000 Sample rates will be an issue
 		// as the data is not consistent.
 		_data.timestamp = _isr_data_ready_timestamp;
+
+		// poll parameter update
+		parameter_update_poll();
 
 		// data is ready
 		update_reports();

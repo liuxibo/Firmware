@@ -47,6 +47,7 @@
 #include <drivers/drv_hrt.h>
 #include <drivers/drv_mixer.h>
 #include <systemlib/mixer/mixer.h>
+#include <systemlib/mixer/mixer_multirotor.generated.h>
 #include <systemlib/param/param.h>
 
 #ifdef __cplusplus
@@ -76,6 +77,11 @@ void uart_esc_rotate_motors(int *motor_rpm, int num_rotors); // motor re-mapping
 int		_controls_sub;
 int		_armed_sub;
 int		_param_sub;
+
+// filenames
+// /dev/fs/ is mapped to /usr/share/data/adsp/
+static const char *MIXER_FILENAME = "/dev/fs/mixer_config.mix";
+
 
 // publications
 orb_advert_t        	_outputs_pub;
@@ -133,92 +139,54 @@ int mixer_control_callback(uintptr_t handle,
 
 int initialize_mixer(const char *mixer_filename)
 {
-	int mixer_initialized = -1;
+   _num_mixer_outputs  = 4; // TODO: should pull this value from the mixer
+   mixer = nullptr;
 
-	static const char *buf =
-		"R: 4x 10000 10000 10000 0\n"
-		"M: 1\n"
-		"O: 10000 10000 0 -10000 10000\n"
-		"S: 0 4 10000 10000 0 -10000 10000\n"
-		"M: 1\n"
-		"O: 10000 10000 0 -10000 10000\n"
-		"S: 0 5 10000 10000 0 -10000 10000\n"
-		"M: 1\n"
-		"O: 10000 10000 0 -10000 10000\n"
-		"S: 0 6 10000 10000 0 -10000 10000\n"
-		"M: 1\n"
-		"O: 10000 10000 0 -10000 10000\n"
-		"S: 0 7 10000 10000 0 -10000 10000\n";
-	/*"Multirotor mixer for PX4FMU\n"
-	"===========================\n"
-	"\n"
-	"This file defines a single mixer for a quadrotor in the X configuration.  All controls\n"
-	"are mixed 100%.\n"
-	"\n"
-	"R: 4x 10000 10000 10000 0\n"
-	"\n"
-	"Gimbal / payload mixer for last four channels\n"
-	"-----------------------------------------------------\n"
-	"\n"
-	"M: 1\n"
-	"O:      10000  10000      0 -10000  10000\n"
-	"S: 0 4  10000  10000      0 -10000  10000\n"
-	"\n"
-	"M: 1\n"
-	"O:      10000  10000      0 -10000  10000\n"
-	"S: 0 5  10000  10000      0 -10000  10000\n"
-	"\n"
-	"M: 1\n"
-	"O:      10000  10000      0 -10000  10000\n"
-	"S: 0 6  10000  10000      0 -10000  10000\n"
-	"\n"
-	"M: 1\n"
-	"O:      10000  10000      0 -10000  10000\n"
-	"S: 0 7  10000  10000      0 -10000  10000\n\n"
-	;*/
-	unsigned int buflen = strlen(buf);
-	_num_mixer_outputs  = 4;
+   int mixer_initialized = -1;
 
-	// This is the intended way to read the charater description of the mixer, and should be re-enabled
-	// when file reading is supported
-#if 0
-	int fd_load = open(mixer_filename, O_RDONLY, 0);
-	char buf[512];
-	unsigned int buflen = sizeof(buf);
+	char buf[2048];
+   unsigned int buflen = sizeof(buf);
+
+   PX4_INFO("Initializing mixer from config file in %s", mixer_filename);
+
+   int fd_load = open(mixer_filename, O_RDONLY);
 
 	if (fd_load != -1) {
 		int nRead = read(fd_load, buf, buflen);
+		close(fd_load);
 
 		if (nRead > 0) {
-			if (mixer_load_from_buf(buf, nRead)) {
-				PX4_INFO("Successfully initialized mixer from config file in /mnt/persist/flightparams/");
-				mixer_initialized = 1;
+		   mixer = MultirotorMixer::from_text(mixer_control_callback, (uintptr_t)&_controls, buf, buflen);
+			if (mixer != nullptr) {
+				PX4_INFO("Successfully initialized mixer from config file");
+				mixer_initialized = 0;
+			} else {
+			   PX4_WARN("Unable to parse from mixer config file");
 			}
+		} else {
+		   PX4_WARN("Unable to read from mixer config file");
 		}
-
-		close(fd_load);
+	} else {
+	   PX4_WARN("Unable to open mixer config file");
 	}
 
-	if (!mixer_initialized) {
+	if (mixer_initialized < 0) {
+	   float roll_scale = 1;
 		float pitch_scale = 1;
 		float yaw_scale = 1;
 		float deadband = 0;
 
-		if (!mixer_initialize_quad_x(roll_scale, pitch_scale, yaw_scale, deadband)) {
+		mixer = new MultirotorMixer(mixer_control_callback, (uintptr_t)&_controls, MultirotorGeometry::QUAD_X, roll_scale, pitch_scale, yaw_scale, deadband);
+
+		if (mixer == nullptr) {
 			PX4_ERR("mixer initialization failed");
 			mixer_initialized = -1;
 			return mixer_initialized;
 		}
 
 		PX4_WARN("mixer config file not found, successfully initialized default quad x mixer");
-		mixer_initialized = true;
+		mixer_initialized = 0;
 	}
-
-#endif
-
-	mixer = MultirotorMixer::from_text(mixer_control_callback, (uintptr_t)&_controls, buf, buflen);
-
-	if (!(mixer == nullptr)) { mixer_initialized = true; }
 
 	return mixer_initialized;
 }
@@ -276,9 +244,7 @@ void task_main(int argc, char *argv[])
 		//orb_set_interval(_controls_sub, 10);  // max actuator update period, ms
 
 		// set up mixer
-		const char *mixer_filename = "/mnt/persist/flightparams/mixer_config.txt";
-
-		if (initialize_mixer(mixer_filename) < 0) {
+		if (initialize_mixer(MIXER_FILENAME) < 0) {
 			PX4_ERR("Mixer initialization failed.");
 			_task_should_exit = true;
 		}

@@ -15,6 +15,7 @@ LDFLAGS	+= -L${HEXAGON_DRIVERS_ROOT}/libs -lmpu9x50
 LDFLAGS	+= -luart_esc
 LDFLAGS	+= -lcsr_gps
 LDFLAGS	+= -lrc_receiver
+LDFLAGS += -lbmp280
 
 #
 # Makefile for the EAGLE QuRT *default* configuration
@@ -29,6 +30,7 @@ MODULES		+= $(EAGLE_DRIVERS_SRC)/mpu9x50
 MODULES		+= $(EAGLE_DRIVERS_SRC)/uart_esc
 MODULES		+= $(EAGLE_DRIVERS_SRC)/rc_receiver
 MODULES		+= $(EAGLE_DRIVERS_SRC)/csr_gps
+MODULES   += $(EAGLE_DRIVERS_SRC)/pressure
 
 #
 # System commands

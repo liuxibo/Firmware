@@ -386,7 +386,6 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 
 	/* wait for initial baro value */
 	bool wait_baro = true;
-
 	thread_running = true;
 	hrt_abstime baro_wait_for_sample_time = hrt_absolute_time();
 

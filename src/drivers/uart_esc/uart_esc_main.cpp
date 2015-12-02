@@ -65,13 +65,14 @@ extern "C" { __EXPORT int uart_esc_main(int argc, char *argv[]); }
 
 namespace uart_esc
 {
+#define UART_ESC_MAX_MOTORS  4
+
 volatile bool _task_should_exit = false; // flag indicating if uart_esc task should exit
 static char _device[MAX_LEN_DEV_PATH];
 static bool _is_running = false;         // flag indicating if uart_esc app is running
 static px4_task_t _task_handle = -1;     // handle to the task main thread
-static struct esc_feedback_s _feedback;  // esc feedback
 UartEsc *esc;                            // esc instance
-void uart_esc_rotate_motors(int *motor_rpm, int num_rotors); // motor re-mapping
+void uart_esc_rotate_motors(int16_t *motor_rpm, int num_rotors); // motor re-mapping
 
 // subscriptions
 int		_controls_sub;
@@ -88,7 +89,7 @@ orb_advert_t        	_outputs_pub;
 
 // topic structures
 actuator_controls_s     _controls;
-actuator_armed_s	_armed;
+actuator_armed_s        _armed;
 parameter_update_s      _param_update;
 actuator_outputs_s      _outputs;
 
@@ -112,6 +113,61 @@ static MultirotorMixer *mixer;
 static int initialize_mixer(const char *mixer_filename);
 static int mixer_control_callback(uintptr_t handle, uint8_t control_group, uint8_t control_index, float &input);
 unsigned int _num_mixer_outputs;
+
+static void parameters_init();
+static void parameters_update();
+
+struct {
+	int model;
+  int baudrate;
+  int px4_motor_mapping[UART_ESC_MAX_MOTORS];
+} _parameters;
+
+struct {
+	param_t model;
+	param_t baudrate;
+	param_t px4_motor_mapping[UART_ESC_MAX_MOTORS];
+} _parameter_handles;
+
+void parameters_init()
+{
+	_parameter_handles.model 		= param_find("UART_ESC_MODEL");
+	_parameter_handles.baudrate = param_find("UART_ESC_BAUDRATE");
+
+	/* PX4 motor mapping parameters */
+	for (unsigned int i = 0; i < UART_ESC_MAX_MOTORS; i++) {
+		char nbuf[20];
+
+		/* min values */
+		sprintf(nbuf, "UART_ESC_PX4MOTOR%d", i + 1);
+		_parameter_handles.px4_motor_mapping[i] = param_find(nbuf);
+	}
+
+	parameters_update();
+}
+
+void parameters_update()
+{
+	PX4_WARN("uart_esc_main parameters_update");
+	int v_int;
+
+	if (param_get(_parameter_handles.model, &v_int) == 0) {
+		_parameters.model = v_int;
+		PX4_WARN("UART_ESC_MODEL %d", _parameters.model);
+	}
+
+	if (param_get(_parameter_handles.baudrate, &v_int) == 0) {
+		_parameters.baudrate = v_int;
+		PX4_WARN("UART_ESC_BAUDRATE %d", _parameters.baudrate);
+	}
+
+	for (unsigned int i = 0; i < UART_ESC_MAX_MOTORS; i++) {
+		if (param_get(_parameter_handles.px4_motor_mapping[i], &v_int) == 0) {
+			_parameters.px4_motor_mapping[i] = v_int;
+			PX4_WARN("UART_ESC_PX4MOTOR%d %d", i+1, _parameters.px4_motor_mapping[i]);
+		}
+	}
+}
 
 int mixer_control_callback(uintptr_t handle,
 			   uint8_t control_group,
@@ -171,7 +227,7 @@ int initialize_mixer(const char *mixer_filename)
 	}
 
 	if (mixer_initialized < 0) {
-	   float roll_scale = 1;
+		float roll_scale = 1;
 		float pitch_scale = 1;
 		float yaw_scale = 1;
 		float deadband = 0;
@@ -195,18 +251,18 @@ int initialize_mixer(const char *mixer_filename)
 * Rotate the motor rpm values based on the motor mappings configuration stored
 * in motor_mapping
 */
-void uart_esc_rotate_motors(int *motor_rpm, int num_rotors)
+void uart_esc_rotate_motors(int16_t *motor_rpm, int num_rotors)
 {
 	ASSERT(num_rotors == 4);
 	int i;
-	int motor_mapping[4] = {2, 4, 1, 3};
-	int motor_rpm_copy[4];
-
-	memcpy(motor_rpm_copy, motor_rpm, sizeof(int)*num_rotors);
+	int16_t motor_rpm_copy[4];
 
 	for (i = 0; i < num_rotors; i++) {
-		// motor_rpm[i] = motor_rpm_copy[motor_mapping[i]-1];
-		motor_rpm[motor_mapping[i] - 1] = motor_rpm_copy[i];
+		motor_rpm_copy[i] = motor_rpm[i];
+	}
+
+	for (i = 0; i < num_rotors; i++) {
+		motor_rpm[_parameters.px4_motor_mapping[i] - 1] = motor_rpm_copy[i];
 	}
 }
 
@@ -216,16 +272,15 @@ void task_main(int argc, char *argv[])
 
 	_outputs_pub = nullptr;
 
-	// Hard coded options for now
-	enum esc_model_t model = ESC_200QX;
-	int baud_rate          = 250000;
+	parameters_init();
 
 	esc = UartEsc::get_instance();
 
 	if (esc == NULL) {
 		PX4_ERR("failed to new UartEsc instance");
 
-	} else if (esc->initialize(model, _device, baud_rate) < 0) {
+	} else if (esc->initialize((enum esc_model_t)_parameters.model,
+	           _device, _parameters.baudrate) < 0) {
 		PX4_ERR("failed to initialize UartEsc");
 
 	} else {
@@ -273,7 +328,7 @@ void task_main(int argc, char *argv[])
 				orb_copy(ORB_ID(actuator_controls_0), _controls_sub, &_controls);
 				// Mix to the outputs
 				_outputs.timestamp = hrt_absolute_time();
-				int motor_rpms[4]; //not yet supporting variable numbers
+				int16_t motor_rpms[4]; //not yet supporting variable numbers
 
 				if (_armed.armed) {
 					_outputs.noutputs = mixer->mix(&_outputs.output[0], _num_mixer_outputs, NULL);
@@ -281,9 +336,8 @@ void task_main(int argc, char *argv[])
 					// Send outputs to the ESCs
 					for (unsigned outIdx = 0; outIdx < _num_mixer_outputs; outIdx++) {
 						// map -1.0 - 1.0 outputs to RPMs
-						motor_rpms[outIdx] = ((_outputs.output[outIdx] + 1.0) / 2.0) *
-								     (esc->max_rpm() - esc->min_rpm()) + esc->min_rpm();
-
+						motor_rpms[outIdx] = (int16_t)(((_outputs.output[outIdx] + 1.0) / 2.0) *
+								     (esc->max_rpm() - esc->min_rpm()) + esc->min_rpm());
 					}
 
 					uart_esc_rotate_motors(motor_rpms, _num_mixer_outputs);
@@ -295,7 +349,7 @@ void task_main(int argc, char *argv[])
 					}
 				}
 
-				esc->send_rpms(motor_rpms, _num_mixer_outputs, false);
+				esc->send_rpms(motor_rpms, _num_mixer_outputs );
 
 				/*
 				static int count=0;

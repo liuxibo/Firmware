@@ -37,7 +37,8 @@
 
 MODULE_COMMAND	= uart_esc
 
-SRCS		= uart_esc_main.cpp
+SRCS		+= uart_esc_main.cpp
+SRCS		+= uart_esc_params.c
 
 MODULE_STACKSIZE	= 1200
 

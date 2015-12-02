@@ -37,6 +37,7 @@
 #include <string.h>
 #include <drivers/drv_hrt.h>
 #include <uORB/topics/input_rc.h>
+#include <uORB/topics/parameter_update.h>
 #include <drivers/drv_rc_input.h>
 
 #ifdef __cplusplus
@@ -86,6 +87,9 @@ static orb_advert_t _input_rc_pub = nullptr;
 /** rc_input uorb topic data */
 static struct input_rc_s _rc_in;
 
+/**< parameter update subscription */
+static int _params_sub;
+
 struct {
 	param_t rc_receiver_type;
 } _params_handles;  /**< parameter handles */
@@ -111,6 +115,9 @@ static void parameters_update();
 /** initialize all parameter handles and load the initial parameter values */
 static void parameters_init();
 
+/** poll parameter update */
+static void parameter_update_poll();
+
 void parameters_update()
 {
 	PX4_DEBUG("rc_receiver_parameters_update");
@@ -129,6 +136,20 @@ void parameters_init()
 	_params_handles.rc_receiver_type	=	param_find("RC_RECEIVER_TYPE");
 
 	parameters_update();
+}
+
+void parameter_update_poll()
+{
+	bool updated;
+
+	/* Check if parameters have changed */
+	orb_check(_params_sub, &updated);
+
+	if (updated) {
+		struct parameter_update_s param_update;
+		orb_copy(ORB_ID(parameter_update), _params_sub, &param_update);
+		parameters_update();
+	}
 }
 
 void start()
@@ -180,6 +201,9 @@ void task_main(int argc, char *argv[])
 		return ;
 	}
 
+	// subscribe to parameter_update topic
+	_params_sub = orb_subscribe(ORB_ID(parameter_update));
+
 	// Open the RC receiver device on the specified serial port
 	fd = rc_receiver_open(_rc_receiver_type, _device);
 
@@ -199,6 +223,9 @@ void task_main(int argc, char *argv[])
 	_rc_in.timestamp_last_signal = ts;
 
 	while (!_task_should_exit) {
+		// poll parameter update
+		parameter_update_poll();
+
 		// read RC packet from serial device in blocking mode.
 		num_channels = input_rc_s::RC_INPUT_MAX_CHANNELS;
 

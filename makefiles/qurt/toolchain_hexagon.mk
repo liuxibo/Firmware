@@ -85,7 +85,7 @@ DYNAMIC_LIBS            = \
 
 # Check if the right version of the toolchain is available
 #
-CROSSDEV_VER_SUPPORTED	 = 6.4.03 6.4.05
+CROSSDEV_VER_SUPPORTED	 = 6.4.03 6.4.05 6.4.06
 CROSSDEV_VER_FOUND	 = $(shell $(CC) --version | sed -n 's/^.*version \([\. 0-9]*\),.*$$/\1/p')
 
 ifeq (,$(findstring $(CROSSDEV_VER_FOUND), $(CROSSDEV_VER_SUPPORTED)))

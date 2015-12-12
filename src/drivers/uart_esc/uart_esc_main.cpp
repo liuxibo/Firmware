@@ -112,7 +112,6 @@ static void task_main(int argc, char *argv[]);
 static MultirotorMixer *mixer;
 static int initialize_mixer(const char *mixer_filename);
 static int mixer_control_callback(uintptr_t handle, uint8_t control_group, uint8_t control_index, float &input);
-unsigned int _num_mixer_outputs;
 
 static void parameters_init();
 static void parameters_update();
@@ -195,7 +194,6 @@ int mixer_control_callback(uintptr_t handle,
 
 int initialize_mixer(const char *mixer_filename)
 {
-   _num_mixer_outputs  = 4; // TODO: should pull this value from the mixer
    mixer = nullptr;
 
    int mixer_initialized = -1;
@@ -226,13 +224,17 @@ int initialize_mixer(const char *mixer_filename)
 	   PX4_WARN("Unable to open mixer config file");
 	}
 
+	// mixer file loading failed, fall back to default mixer configuration for
+	// QUAD_X airframe
 	if (mixer_initialized < 0) {
 		float roll_scale = 1;
 		float pitch_scale = 1;
 		float yaw_scale = 1;
 		float deadband = 0;
 
-		mixer = new MultirotorMixer(mixer_control_callback, (uintptr_t)&_controls, MultirotorGeometry::QUAD_X, roll_scale, pitch_scale, yaw_scale, deadband);
+		mixer = new MultirotorMixer(mixer_control_callback, (uintptr_t)&_controls,
+		                            MultirotorGeometry::QUAD_X,
+		                            roll_scale, pitch_scale, yaw_scale, deadband);
 
 		if (mixer == nullptr) {
 			PX4_ERR("mixer initialization failed");
@@ -253,9 +255,9 @@ int initialize_mixer(const char *mixer_filename)
 */
 void uart_esc_rotate_motors(int16_t *motor_rpm, int num_rotors)
 {
-	ASSERT(num_rotors == 4);
+	ASSERT(num_rotors <= UART_ESC_MAX_MOTORS);
 	int i;
-	int16_t motor_rpm_copy[4];
+	int16_t motor_rpm_copy[UART_ESC_MAX_MOTORS];
 
 	for (i = 0; i < num_rotors; i++) {
 		motor_rpm_copy[i] = motor_rpm[i];
@@ -328,28 +330,38 @@ void task_main(int argc, char *argv[])
 				orb_copy(ORB_ID(actuator_controls_0), _controls_sub, &_controls);
 				// Mix to the outputs
 				_outputs.timestamp = hrt_absolute_time();
-				int16_t motor_rpms[4]; //not yet supporting variable numbers
+				int16_t motor_rpms[UART_ESC_MAX_MOTORS];
 
 				if (_armed.armed) {
-					_outputs.noutputs = mixer->mix(&_outputs.output[0], _num_mixer_outputs, NULL);
+					_outputs.noutputs = mixer->mix(&_outputs.output[0],
+					                               actuator_controls_0_s::NUM_ACTUATOR_CONTROLS,
+					                               NULL);
+
+					// Make sure we support only up to UART_ESC_MAX_MOTORS motors
+					if (_outputs.noutputs > UART_ESC_MAX_MOTORS) {
+						PX4_ERR("Unsupported motors %d, up to %d motors supported",
+						        _outputs.noutputs, UART_ESC_MAX_MOTORS);
+						continue;
+					}
 
 					// Send outputs to the ESCs
-					for (unsigned outIdx = 0; outIdx < _num_mixer_outputs; outIdx++) {
+					for (unsigned outIdx = 0; outIdx < _outputs.noutputs; outIdx++) {
 						// map -1.0 - 1.0 outputs to RPMs
 						motor_rpms[outIdx] = (int16_t)(((_outputs.output[outIdx] + 1.0) / 2.0) *
 								     (esc->max_rpm() - esc->min_rpm()) + esc->min_rpm());
 					}
 
-					uart_esc_rotate_motors(motor_rpms, _num_mixer_outputs);
+					uart_esc_rotate_motors(motor_rpms, _outputs.noutputs);
 
 				} else {
-					for (unsigned outIdx = 0; outIdx < _num_mixer_outputs; outIdx++) {
+					_outputs.noutputs = UART_ESC_MAX_MOTORS;
+					for (unsigned outIdx = 0; outIdx < _outputs.noutputs; outIdx++) {
 						motor_rpms[outIdx]      = 0;
 						_outputs.output[outIdx] = -1.0;
 					}
 				}
 
-				esc->send_rpms(motor_rpms, _num_mixer_outputs );
+				esc->send_rpms(motor_rpms, _outputs.noutputs);
 
 				/*
 				static int count=0;

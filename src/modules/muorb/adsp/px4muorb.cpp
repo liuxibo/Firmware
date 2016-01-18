@@ -30,6 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+#include <stdint.h>
 #include "px4muorb.hpp"
 #include "qurt.h"
 #include "uORBFastRpcChannel.hpp"
@@ -44,12 +45,11 @@
 #include "uORB/topics/sensor_combined.h"
 #include "uORB.h"
 
-#include "HAP_power.h"
-
 #define _ENABLE_MUORB 1
 
 extern "C" {
 int dspal_main(int argc, const char *argv[]);
+int HAP_power_request( int clock, int bus, int latency );
 };
 
 

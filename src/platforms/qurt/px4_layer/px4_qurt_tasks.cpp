@@ -182,7 +182,7 @@ px4_task_t px4_task_spawn_cmd(const char *name, int scheduler, int priority, int
 
 	rv = pthread_attr_setschedparam(&attr, &param);
 	if (rv != 0) {
-		PX4_WARN("px4_task_spawn_cmd: failed to set sched param");
+		PX4_WARN("px4_task_spawn_cmd: failed to set sched param, rv:%d priority: %d", rv, priority );
 		return (rv < 0) ? rv : -rv;
 	}
 

@@ -389,9 +389,9 @@ exit:
 			pthread_mutex_destroy(&mutex);
 		}
 
-		if (new_data_sem._magic != 0) {
-			sem_destroy(&new_data_sem);
-		}
+		//if (new_data_sem._magic != 0) {
+		//	sem_destroy(&new_data_sem);
+		//}
 	}
 
 	/* Success, so return the handle in the caller's out variable. */

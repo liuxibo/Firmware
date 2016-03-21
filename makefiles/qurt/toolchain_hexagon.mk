@@ -112,7 +112,6 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD) \
 			    -D_PID_T -D_UID_T -D_TIMER_T\
 			    -Dnoreturn_function= \
 			    -D__EXPORT= \
-			    -Drestrict= \
 			    -D_DEBUG \
 			    -I$(DSPAL_INCS)/include \
 			    -I$(DSPAL_INCS)/sys \

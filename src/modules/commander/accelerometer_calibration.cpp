@@ -436,12 +436,13 @@ calibrate_return do_accel_calibration_measurements(orb_advert_t *mavlink_log_pub
 		PX4_INFO("Subscription created for sensor_accel: %d", worker_data.subs[i]);
 
 		/* store initial timestamp - used to infer which sensors are active */
-		(void)orb_copy(ORB_ID(sensor_accel), worker_data.subs[i], &arp);
 		struct accel_report arp = {};
+		(void)orb_copy(ORB_ID(sensor_accel), worker_data.subs[i], &arp);
 		timestamps[i] = arp.timestamp;
 #ifdef __USING_SNAPDRAGON_LEGACY_DRIVER
-		/* For QURT respectively the driver framework, we need to get the device ID by copying one report. */
-		device_id[i] = arp.device_id;
+// TODO-JYW: TESTING-TESTING
+		device_id[i] = 1;
+//		device_id[i] = arp.device_id;
 #endif
 
 		// TODO-JYW: TESTING-TESTING:

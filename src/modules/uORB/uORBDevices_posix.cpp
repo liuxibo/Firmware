@@ -270,6 +270,15 @@ uORB::DeviceNode::write(device::file_t *filp, const char *buffer, size_t buflen)
 	return _meta->o_size;
 }
 
+// TODO-JYW: LEFT-OFF: Implement the additional VDev member functions used
+// in the implementation of the functions in the uORB::Manager such as
+// orb_exists().  For the latter function px4_access is used which in turn
+// uses VDev::getDev (unfortunately a static function) to determine if the
+// device node has been created.  The latter function should be made virtual
+// to allow device nodes to also be retrieved by derived classes, in this
+// case uORB::DeviceNode which maintains remote nodes.
+//
+// Hopefully this still makes sense on Monday. :-)
 int
 uORB::DeviceNode::ioctl(device::file_t *filp, int cmd, unsigned long arg)
 {

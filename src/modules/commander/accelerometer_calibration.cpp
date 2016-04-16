@@ -329,7 +329,7 @@ int do_accel_calibration(orb_advert_t *mavlink_log_pub)
 			return ERROR;
 		}
 
-#ifndef __PX4_QURT
+#ifndef __USING_SNAPDRAGON_LEGACY_DRIVER
 		sprintf(str, "%s%u", ACCEL_BASE_DEVICE_PATH, i);
 		fd = px4_open(str, 0);
 
@@ -411,24 +411,41 @@ calibrate_return do_accel_calibration_measurements(orb_advert_t *mavlink_log_pub
 	uint64_t timestamps[max_accel_sens];
 
 	// We should not try to subscribe if the topic doesn't actually exist and can be counted.
-	const unsigned accel_count = orb_group_count(ORB_ID(sensor_accel));
+	// const unsigned accel_count = orb_group_count(ORB_ID(sensor_accel));
+	// TODO-JYW: TESTING-TESTING:
+	unsigned accel_count = orb_group_count(ORB_ID(sensor_accel));
+
+	// TODO-JYW: TESTING-TESTING:
+	PX4_INFO("orb_group_count(ORB_ID(sensor_accel)): %d.", accel_count);
+	accel_count = 1;
+	// TODO-JYW: TESTING-TESTING:
+
 	for (unsigned i = 0; i < accel_count; i++) {
+		// TODO-JYW: TESTING-TESTING:
+		PX4_INFO("Attempting to create the sensor_accel subscription.");
+
 		worker_data.subs[i] = orb_subscribe_multi(ORB_ID(sensor_accel), i);
 		if (worker_data.subs[i] < 0) {
+			// TODO-JYW: TESTING-TESTING
+			PX4_INFO("Subscription failed for sensor_accel: %d", worker_data.subs[i]);
 			result = calibrate_return_error;
 			break;
 		}
 
-#ifdef __PX4_QURT
-		// For QURT respectively the driver framework, we need to get the device ID by copying one report.
-		struct accel_report	accel_report;
-		orb_copy(ORB_ID(sensor_accel), worker_data.subs[i], &accel_report);
-		device_id[i] = accel_report.device_id;
-#endif
+		// TODO-JYW: TESTING-TESTING
+		PX4_INFO("Subscription created for sensor_accel: %d", worker_data.subs[i]);
+
 		/* store initial timestamp - used to infer which sensors are active */
-		struct accel_report arp = {};
 		(void)orb_copy(ORB_ID(sensor_accel), worker_data.subs[i], &arp);
+		struct accel_report arp = {};
 		timestamps[i] = arp.timestamp;
+#ifdef __USING_SNAPDRAGON_LEGACY_DRIVER
+		/* For QURT respectively the driver framework, we need to get the device ID by copying one report. */
+		device_id[i] = arp.device_id;
+#endif
+
+		// TODO-JYW: TESTING-TESTING:
+		PX4_INFO("Accelerometer device ID: %d", device_id[i]);
 
 		if (device_id[i] != 0) {
 			// Get priority
@@ -451,6 +468,8 @@ calibrate_return do_accel_calibration_measurements(orb_advert_t *mavlink_log_pub
 		result = calibrate_from_orientation(mavlink_log_pub, cancel_sub, data_collected, accel_calibration_worker, &worker_data, false /* normal still */);
 		calibrate_cancel_unsubscribe(cancel_sub);
 	}
+	// TODO-JYW: TESTING-TESTING
+	PX4_INFO("result: %d", calibrate_return_ok);
 
 	/* close all subscriptions */
 	for (unsigned i = 0; i < max_accel_sens; i++) {
@@ -470,12 +489,18 @@ calibrate_return do_accel_calibration_measurements(orb_advert_t *mavlink_log_pub
 		for (unsigned i = 0; i < (*active_sensors); i++) {
 			result = calculate_calibration_values(i, worker_data.accel_ref, accel_T, accel_offs, CONSTANTS_ONE_G);
 
+			// TODO-JYW: TESTING-TESTING
+			PX4_INFO("calculating_calibration_values: %d", result);
+
 			if (result != calibrate_return_ok) {
 				mavlink_and_console_log_critical(mavlink_log_pub, "[cal] ERROR: calibration calculation error");
 				break;
 			}
 		}
 	}
+
+	// TODO-JYW: TESTING-TESTING
+	PX4_INFO("do_accel_calibration_measurements: %d", result);
 
 	return result;
 }
@@ -523,6 +548,10 @@ calibrate_return read_accelerometer_avg(int (&subs)[max_accel_sens], float (&acc
 
 	unsigned errcount = 0;
 
+	// TODO-JYW: TESTING-TESTING:
+	bool first_check = true;
+
+
 	/* use the first sensor to pace the readout, but do per-sensor counts */
 	while (counts[0] < samples_num) {
 		int poll_ret = px4_poll(&fds[0], max_accel_sens, 1000);
@@ -531,7 +560,19 @@ calibrate_return read_accelerometer_avg(int (&subs)[max_accel_sens], float (&acc
 
 			for (unsigned s = 0; s < max_accel_sens; s++) {
 				bool changed;
-				orb_check(subs[s], &changed);
+
+				// TODO-JYW: TESTING-TESTING
+				if (first_check)
+				{
+					changed = true;
+					first_check = false;
+				}
+				else
+				{
+					orb_check(subs[s], &changed);
+				}
+				// TODO-JYW: TESTING-TESTING: Original code below.
+				// orb_check(subs[s], &changed);
 
 				if (changed) {
 

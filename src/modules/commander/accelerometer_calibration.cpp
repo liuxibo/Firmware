@@ -175,7 +175,7 @@ typedef struct  {
 
 int do_accel_calibration(orb_advert_t *mavlink_log_pub)
 {
-#ifndef __PX4_QURT
+#if !defined(__PX4_POSIX_EAGLE) && !defined(__PX4_QURT)
 	int fd;
 #endif
 
@@ -195,7 +195,7 @@ int do_accel_calibration(orb_advert_t *mavlink_log_pub)
 
 	/* reset all sensors */
 	for (unsigned s = 0; s < max_accel_sens; s++) {
-#ifndef __PX4_QURT
+#if !defined(__PX4_POSIX_EAGLE) && !defined(__PX4_QURT)
 		sprintf(str, "%s%u", ACCEL_BASE_DEVICE_PATH, s);
 		/* reset all offsets to zero and all scales to one */
 		fd = px4_open(str, 0);
@@ -329,7 +329,7 @@ int do_accel_calibration(orb_advert_t *mavlink_log_pub)
 			return ERROR;
 		}
 
-#ifndef __PX4_QURT
+#if !defined(__PX4_POSIX_EAGLE) && !defined(__PX4_QURT)
 		sprintf(str, "%s%u", ACCEL_BASE_DEVICE_PATH, i);
 		fd = px4_open(str, 0);
 
@@ -411,7 +411,12 @@ calibrate_return do_accel_calibration_measurements(orb_advert_t *mavlink_log_pub
 	uint64_t timestamps[max_accel_sens];
 
 	// We should not try to subscribe if the topic doesn't actually exist and can be counted.
+#if !defined(__PX4_POSIX_EAGLE) && !defined(__PX4_QURT)
 	const unsigned accel_count = orb_group_count(ORB_ID(sensor_accel));
+#else
+	// TODO-FIX: Temporary work around until orb_group_count is supported.
+	const unsigned accel_count = 1;
+#endif
 	for (unsigned i = 0; i < accel_count; i++) {
 		worker_data.subs[i] = orb_subscribe_multi(ORB_ID(sensor_accel), i);
 		if (worker_data.subs[i] < 0) {
@@ -419,11 +424,15 @@ calibrate_return do_accel_calibration_measurements(orb_advert_t *mavlink_log_pub
 			break;
 		}
 
-#ifdef __PX4_QURT
+#if defined(__PX4_POSIX_EAGLE) || defined(__PX4_QURT)
 		// For QURT respectively the driver framework, we need to get the device ID by copying one report.
 		struct accel_report	accel_report;
 		orb_copy(ORB_ID(sensor_accel), worker_data.subs[i], &accel_report);
 		device_id[i] = accel_report.device_id;
+
+		// TODO-JYW: TESTING-TESTING
+		device_id[i] = 1;
+		// TODO-JYW: TESTING-TESTING
 #endif
 		/* store initial timestamp - used to infer which sensors are active */
 		struct accel_report arp = {};
@@ -530,8 +539,13 @@ calibrate_return read_accelerometer_avg(int (&subs)[max_accel_sens], float (&acc
 		if (poll_ret > 0) {
 
 			for (unsigned s = 0; s < max_accel_sens; s++) {
+
+#if !defined(__PX4_POSIX_EAGLE) && !defined(__PX4_QURT)
 				bool changed;
 				orb_check(subs[s], &changed);
+#else
+				bool changed = true;
+#endif
 
 				if (changed) {
 

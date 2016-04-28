@@ -30,19 +30,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
-px4_add_module(
-	MODULE drivers__lis3mdl
-	MAIN lis3mdl
 
-	STACK_MAIN 1200
-	COMPILE_FLAGS
-		-Weffc++
-		-Os
+include_directories(../../../../lib/DriverFramework/drivers)
+
+px4_add_module(
+	MODULE platforms__posix__drivers__df_isl29501_wrapper
+	MAIN df_isl29501_wrapper
 	SRCS
-		lis3mdl_i2c.cpp
-		lis3mdl_spi.cpp
-		lis3mdl.cpp
+		df_isl29501_wrapper.cpp
 	DEPENDS
 		platforms__common
+		df_driver_framework
+		df_isl29501
 	)
-# vim: set noet ft=cmake fenc=utf-8 ff=unix : 
+# vim: set noet ft=cmake fenc=utf-8 ff=unix :

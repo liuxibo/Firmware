@@ -681,8 +681,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 	mavlink_set_position_target_local_ned_t set_position_target_local_ned;
 	mavlink_msg_set_position_target_local_ned_decode(msg, &set_position_target_local_ned);
 
-	struct offboard_control_mode_s offboard_control_mode;
-	memset(&offboard_control_mode, 0, sizeof(offboard_control_mode));//XXX breaks compatibility with multiple setpoints
+	struct offboard_control_mode_s offboard_control_mode = {};
 
 	bool values_finite =
 		PX4_ISFINITE(set_position_target_local_ned.x) &&
@@ -758,7 +757,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 
 				} else {
 					/* It's not a pure force setpoint: publish to setpoint triplet  topic */
-					struct position_setpoint_triplet_s pos_sp_triplet;
+					struct position_setpoint_triplet_s pos_sp_triplet = {};
 					pos_sp_triplet.previous.valid = false;
 					pos_sp_triplet.next.valid = false;
 					pos_sp_triplet.current.valid = true;
@@ -858,11 +857,9 @@ MavlinkReceiver::handle_message_set_actuator_control_target(mavlink_message_t *m
 	mavlink_set_actuator_control_target_t set_actuator_control_target;
 	mavlink_msg_set_actuator_control_target_decode(msg, &set_actuator_control_target);
 
-	struct offboard_control_mode_s offboard_control_mode;
-	memset(&offboard_control_mode, 0, sizeof(offboard_control_mode));//XXX breaks compatibility with multiple setpoints
+	struct offboard_control_mode_s offboard_control_mode = {};
 
-	struct actuator_controls_s actuator_controls;
-	memset(&actuator_controls, 0, sizeof(actuator_controls));//XXX breaks compatibility with multiple setpoints
+	struct actuator_controls_s actuator_controls = {};
 
 	bool values_finite =
 		PX4_ISFINITE(set_actuator_control_target.controls[0]) &&

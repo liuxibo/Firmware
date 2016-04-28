@@ -50,7 +50,7 @@ Battery::Battery() :
 	_param_v_load_drop(this, "V_LOAD_DROP"),
 	_param_low_thr(this, "LOW_THR"),
 	_param_crit_thr(this, "CRIT_THR"),
-	_voltage_filtered_v(0.0f),
+	_voltage_filtered_v(-1.0f),
 	_throttle_filtered(0.0f),
 	_discharged_mah(0.0f),
 	_remaining(1.0f),
@@ -84,7 +84,7 @@ Battery::updateBatteryStatus(hrt_abstime timestamp, float voltage_v, float curre
 	battery_status->timestamp = timestamp;
 	filterVoltage(voltage_v);
 	sumDischarged(timestamp, current_a);
-	estimateRemaining(voltage_v, throttle_normalized);
+	estimateRemaining(_voltage_filtered_v, throttle_normalized);
 	determineWarning();
 
 	if (_voltage_filtered_v > 2.1f) {
@@ -101,6 +101,10 @@ Battery::updateBatteryStatus(hrt_abstime timestamp, float voltage_v, float curre
 void
 Battery::filterVoltage(float voltage_v)
 {
+	if (_voltage_filtered_v < 0) {
+		_voltage_filtered_v = voltage_v;
+	}
+
 	// TODO: inspect that filter performance
 	const float filtered_next = _voltage_filtered_v * 0.999f + voltage_v * 0.001f;
 
@@ -132,7 +136,7 @@ void
 Battery::estimateRemaining(float voltage_v, float throttle_normalized)
 {
 	// XXX this time constant needs to become tunable but really, the right fix are smart batteries.
-	const float filtered_next = _throttle_filtered * 0.97f + throttle_normalized * 0.03f;
+	const float filtered_next = _throttle_filtered * 0.97f + fabsf(throttle_normalized) * 0.03f;
 
 	if (PX4_ISFINITE(filtered_next)) {
 		_throttle_filtered = filtered_next;

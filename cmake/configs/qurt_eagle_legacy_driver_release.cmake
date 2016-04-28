@@ -42,7 +42,13 @@ set(config_module_list
 	drivers/device
 	modules/sensors
 	platforms/posix/drivers/df_bmp280_wrapper
-	${EAGLE_DRIVERS_SRC}/mpu_spi
+	
+# TODO-JYW: TESTING-TESTING	
+   platforms/posix/drivers/df_mpu9250_wrapper
+   	
+# TODO-JYW: TESTING-TESTING	
+#	${EAGLE_DRIVERS_SRC}/mpu_spi
+
 	${EAGLE_DRIVERS_SRC}/uart_esc
 	${EAGLE_DRIVERS_SRC}/rc_receiver
 
@@ -54,7 +60,6 @@ set(config_module_list
 	#
 	# Estimation modules (EKF/ SO3 / other filters)
 	#
-	#modules/attitude_estimator_ekf
 	modules/ekf_att_pos_estimator
 	modules/attitude_estimator_q
 	modules/position_estimator_inav
@@ -103,4 +108,6 @@ set(config_module_list
 
 set(config_df_driver_list
 	bmp280
+# TODO-JYW: TESTING-TESTING
+	mpu9250		
 	)

@@ -77,7 +77,7 @@ using namespace DriverFramework;
 class DfMpu9250Wrapper : public MPU9250
 {
 public:
-	DfMpu9250Wrapper(/*enum Rotation rotation*/);
+	DfMpu9250Wrapper(bool mag_enabled);
 	~DfMpu9250Wrapper();
 
 
@@ -153,8 +153,8 @@ private:
 	uint64_t		    _last_accel_range_hit_count;
 };
 
-DfMpu9250Wrapper::DfMpu9250Wrapper(/*enum Rotation rotation*/) :
-	MPU9250(IMU_DEVICE_PATH),
+DfMpu9250Wrapper::DfMpu9250Wrapper(bool mag_enabled) :
+	MPU9250(IMU_DEVICE_PATH, mag_enabled),
 	_accel_topic(nullptr),
 	_gyro_topic(nullptr),
 	_mavlink_log_pub(nullptr),
@@ -588,9 +588,9 @@ int stop();
 int info();
 void usage();
 
-int start(/*enum Rotation rotation*/)
+int start(bool mag_enabled)
 {
-	g_dev = new DfMpu9250Wrapper(/*rotation*/);
+	g_dev = new DfMpu9250Wrapper(mag_enabled);
 
 	if (g_dev == nullptr) {
 		PX4_ERR("failed instantiating DfMpu9250Wrapper object");
@@ -695,9 +695,10 @@ df_mpu9250_wrapper_main(int argc, char *argv[])
 
 	const char *verb = argv[myoptind];
 
-
+	if (!strcmp(verb, "start_with_mag")) {
+		ret = df_mpu9250_wrapper::start(true);
 	if (!strcmp(verb, "start")) {
-		ret = df_mpu9250_wrapper::start(/*rotation*/);
+		ret = df_mpu9250_wrapper::start(false);
 	}
 
 	else if (!strcmp(verb, "stop")) {

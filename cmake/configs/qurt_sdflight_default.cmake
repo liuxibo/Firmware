@@ -39,6 +39,9 @@ set(config_module_list
 	modules/attitude_estimator_q
 	modules/position_estimator_inav
 	modules/ekf2
+	
+# TODO-JYW: TESTING-TESTING	
+	modules/ekf2
 
 	#
 	# Vehicle Control

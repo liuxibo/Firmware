@@ -394,10 +394,12 @@ void AttitudeEstimatorQ::task_main()
 				continue;
 			}
 
-			if (_mag.length() < 0.01f) {
-				warnx("WARNING: degenerate mag!");
-				continue;
-			}
+// TODO-JYW: TESTING-TESTING
+//			if (_mag.length() < 0.01f) {
+//				warnx("WARNING: degenerate mag!");
+//				continue;
+//			}
+// TODO-JYW: TESTING-TESTING
 
 			_data_good = true;
 
@@ -602,6 +604,10 @@ void AttitudeEstimatorQ::task_main()
 
 		/* the instance count is not used here */
 		int att_inst;
+
+		// TODO-JYW: TESTING-TESTING:
+		PX4_INFO("publishing vehicle attitude");
+
 		orb_publish_auto(ORB_ID(vehicle_attitude), &_att_pub, &att, &att_inst, ORB_PRIO_HIGH);
 
 		{
@@ -638,6 +644,10 @@ void AttitudeEstimatorQ::task_main()
 
 			/* the instance count is not used here */
 			int ctrl_inst;
+
+			// TODO-JYW: TESTING-TESTING:
+			PX4_INFO("publishing control state");
+
 			/* publish to control state topic */
 			orb_publish_auto(ORB_ID(control_state), &_ctrl_state_pub, &ctrl_state, &ctrl_inst, ORB_PRIO_HIGH);
 		}

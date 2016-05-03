@@ -130,7 +130,7 @@ void release_shmem_lock(void)
 
 void init_shared_memory(void)
 {
-	//PX4_INFO("Value at lock address is %d\n", *(unsigned int*)0xfbfc000);
+	PX4_ERR("Value at lock address is 0x%x\n", MAP_ADDRESS);
 
 	virt_addr = map_memory(MAP_ADDRESS);
 	shmem_info_p = (struct shmem_info *)virt_addr;

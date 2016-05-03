@@ -727,6 +727,7 @@ param_set_default_file(const char *filename)
 const char *
 param_get_default_file(void)
 {
+	PX4_ERR("param_default_file %s", param_default_file);
 	return (param_user_file != NULL) ? param_user_file : param_default_file;
 }
 

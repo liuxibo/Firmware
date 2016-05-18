@@ -248,9 +248,9 @@ private:
 	control::BlockParamFloat _tau_pos;	// time constant used by the output position complementary filter (s)
 
 	// IMU switch on bias paameters
-	control::BlockParamFloat _gyr_bias_init;	// 1-sigma gyro bias uncertainty at switch-on (rad/sec)
-	control::BlockParamFloat _acc_bias_init;	// 1-sigma accelerometer bias uncertainty at switch-on (m/s**2)
-	control::BlockParamFloat _ang_err_init;		// 1-sigma uncertainty in tilt angle after gravity vector alignment (rad)
+//	control::BlockParamFloat _gyr_bias_init;	// 1-sigma gyro bias uncertainty at switch-on (rad/sec)
+//	control::BlockParamFloat _acc_bias_init;	// 1-sigma accelerometer bias uncertainty at switch-on (m/s**2)
+//	control::BlockParamFloat _ang_err_init;		// 1-sigma uncertainty in tilt angle after gravity vector alignment (rad)
 
 	int update_subscriptions();
 
@@ -336,10 +336,10 @@ Ekf2::Ekf2():
 	_flow_pos_y(this, "EKF2_OF_POS_Y", false, &_params->flow_pos_body(1)),
 	_flow_pos_z(this, "EKF2_OF_POS_Z", false, &_params->flow_pos_body(2)),
 	_tau_vel(this, "EKF2_TAU_VEL", false, &_params->vel_Tau),
-	_tau_pos(this, "EKF2_TAU_POS", false, &_params->pos_Tau),
-	_gyr_bias_init(this, "EKF2_GBIAS_INIT", false, &_params->switch_on_gyro_bias),
-	_acc_bias_init(this, "EKF2_ABIAS_INIT", false, &_params->switch_on_accel_bias),
-	_ang_err_init(this, "EKF2_ANGERR_INIT", false, &_params->initial_tilt_err)
+	_tau_pos(this, "EKF2_TAU_POS", false, &_params->pos_Tau)
+//	_gyr_bias_init(this, "EKF2_GBIAS_INIT", false, &_params->switch_on_gyro_bias),
+//	_acc_bias_init(this, "EKF2_ABIAS_INIT", false, &_params->switch_on_accel_bias),
+//	_ang_err_init(this, "EKF2_ANGERR_INIT", false, &_params->initial_tilt_err)
 {
 
 }

@@ -26,8 +26,8 @@ set(config_module_list
 	modules/sensors
 	platforms/posix/drivers/df_mpu9250_wrapper
 	platforms/posix/drivers/df_bmp280_wrapper
-	${EAGLE_DRIVERS_SRC}/uart_esc
-	${EAGLE_DRIVERS_SRC}/rc_receiver
+	$ENV{EAGLE_DRIVERS_SRC}/uart_esc
+	$ENV{EAGLE_DRIVERS_SRC}/rc_receiver
 
 
 	#

@@ -331,14 +331,14 @@ void task_main(int argc, char *argv[])
 			if (fds[0].revents & POLLIN) {
 
 				// Grab new controls data
-				orb_copy(ORB_ID(actuator_controls_0), _controls_sub, &_controls);
+				orb_copy(ORB_ID(actuator_controls), _controls_sub, &_controls);
 				// Mix to the outputs
 				_outputs.timestamp = hrt_absolute_time();
 				int16_t motor_rpms[UART_ESC_MAX_MOTORS];
 
 				if (_armed.armed) {
 					_outputs.noutputs = mixer->mix(&_outputs.output[0],
-								       actuator_controls_0_s::NUM_ACTUATOR_CONTROLS,
+								       actuator_controls_s::NUM_ACTUATOR_CONTROLS,
 								       NULL);
 
 					// Make sure we support only up to UART_ESC_MAX_MOTORS motors

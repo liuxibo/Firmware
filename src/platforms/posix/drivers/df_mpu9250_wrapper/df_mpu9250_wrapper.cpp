@@ -697,7 +697,9 @@ df_mpu9250_wrapper_main(int argc, char *argv[])
 
 	if (!strcmp(verb, "start_with_mag")) {
 		ret = df_mpu9250_wrapper::start(true);
-	if (!strcmp(verb, "start")) {
+	}
+
+	else if (!strcmp(verb, "start")) {
 		ret = df_mpu9250_wrapper::start(false);
 	}
 

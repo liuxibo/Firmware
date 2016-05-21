@@ -44,28 +44,43 @@ endif()
 include_directories(
 	${FC_ADDON}/flight_controller/hexagon/inc
 	)
+	
+include_directories(./
+	$ENV{HEXAGON_SDK_ROOT}/inc
+	$ENV{HEXAGON_SDK_ROOT}/inc/stddef
+	)
 
-add_library(libuart_esc SHARED IMPORTED GLOBAL)
-set_target_properties(libuart_esc PROPERTIES IMPORTED_LOCATION ${FC_ADDON}/flight_controller/hexagon/libs/libuart_esc.so)
+# TODO-JYW: Temporarily disabling FC_ADDON builds.  Must be modified to support
+# both internal and add-on builds.
+
+#add_library(libuart_esc SHARED IMPORTED GLOBAL)
+#set_target_properties(libuart_esc PROPERTIES IMPORTED_LOCATION ${FC_ADDON}/flight_controller/hexagon/libs/libuart_esc.so)
 
 px4_add_module(
         MODULE platforms__qurt__fc_addon__uart_esc
         MAIN uart_esc
-	STACK_MAIN 1200
+		STACK_MAIN 1200
         COMPILE_FLAGS
                 -Os -Weffc++
         SRCS
                 uart_esc_main.cpp
-		uart_esc_params.c
+				uart_esc_params.c
+				$ENV{EAGLE_DRIVERS_SRC}/uart_esc/esc200mm_cmd_packet.cpp
+				$ENV{EAGLE_DRIVERS_SRC}/uart_esc/esc210qc_cmd_packet.cpp
+				$ENV{EAGLE_DRIVERS_SRC}/uart_esc/esc350mm_cmd_packet.cpp
+				$ENV{EAGLE_DRIVERS_SRC}/uart_esc/esc_cmd_packet.cpp
+				$ENV{EAGLE_DRIVERS_SRC}/uart_esc/flight_perf.c
+				$ENV{EAGLE_DRIVERS_SRC}/uart_esc/qc_esc_crc16.c
+				$ENV{EAGLE_DRIVERS_SRC}/uart_esc/uart_esc.cpp
 
         DEPENDS
                 platforms__common
         )
 
-set(module_external_libraries 
-	${module_external_libraries}
-	libuart_esc 
-	CACHE INTERNAL "module_external_libraries"
-	)
+#set(module_external_libraries 
+#	${module_external_libraries}
+#	libuart_esc 
+#	CACHE INTERNAL "module_external_libraries"
+#	)
 	
 # vim: set noet ft=cmake fenc=utf-8 ff=unix : 

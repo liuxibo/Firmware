@@ -16,6 +16,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/cmake_hexa
 
 add_definitions(
    -D__USING_SNAPDRAGON_LEGACY_DRIVER
+   -D__PX4_QURT
+   -D__PX4_QURT_EAGLE   
    )
 
 set(config_module_list

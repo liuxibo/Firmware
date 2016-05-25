@@ -12,7 +12,7 @@ set(CONFIG_SHMEM "1")
 # or if it is for the Snapdragon.
 add_definitions(
 	-D__PX4_POSIX_EAGLE
-   -D__USING_SNAPDRAGON_LEGACY_DRIVER
+    -D__USING_SNAPDRAGON_LEGACY_DRIVER
 	)
 
 set(config_module_list
@@ -48,6 +48,8 @@ set(config_module_list
 	modules/logger
 	modules/simulator
 	modules/commander
+	modules/navigator
+	modules/load_mon
 
 	lib/controllib
 	lib/mathlib

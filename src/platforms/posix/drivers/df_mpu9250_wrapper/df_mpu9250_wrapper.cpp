@@ -560,6 +560,9 @@ void DfMpu9250Wrapper::_update_mag_calibration()
 
 int DfMpu9250Wrapper::_publish(struct imu_sensor_data &data)
 {
+	// TODO-JYW: TESTING-TESTING:
+//	PX4_INFO("mag x: %f, mag y: %f, mag z: %f", (double)data.mag_ga_x, (double)data.mag_ga_y, (double)data.mag_ga_z);
+
 	/* Check if calibration values are still up-to-date. */
 	bool updated;
 	orb_check(_param_update_sub, &updated);
@@ -707,7 +710,7 @@ int DfMpu9250Wrapper::_publish(struct imu_sensor_data &data)
 		}
 
 		if ((_mag_topic != nullptr) && (_mag_enabled == true)) {
-			orb_publish(ORB_ID(sensor_accel), _mag_topic, &mag_report);
+			orb_publish(ORB_ID(sensor_mag), _mag_topic, &mag_report);
 		}
 
 		/* Notify anyone waiting for data. */

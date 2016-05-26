@@ -63,7 +63,6 @@ set(config_module_list
 	# PX4 drivers
 	#
 	drivers/gps
-	#drivers/uart_esc
 	drivers/qshell/qurt
 
 	#
@@ -71,7 +70,6 @@ set(config_module_list
 	#
 	platforms/qurt/fc_addon/rc_receiver
 	platforms/qurt/fc_addon/uart_esc
-	#platforms/qurt/fc_addon/mpu_spi
 
 	#
 	# Libraries

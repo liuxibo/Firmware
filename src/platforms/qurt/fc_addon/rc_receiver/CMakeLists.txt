@@ -62,11 +62,6 @@ if ("$ENV{EAGLE_DRIVERS_SRC}" STREQUAL "")
 	        SRCS
 	                rc_receiver_main.cpp
 					rc_receiver_params.c
-				$ENV{EAGLE_DRIVERS_SRC}/rc_receiver/rc_receiver_api.cpp
-				$ENV{EAGLE_DRIVERS_SRC}/rc_receiver/spektrum_rc.cpp
-				$ENV{EAGLE_DRIVERS_SRC}/rc_receiver/spektrum_rc_support.cpp
-				$ENV{EAGLE_DRIVERS_SRC}/rc_receiver/spektrum_rc_test.cpp
-			
 	        DEPENDS
 	                platforms__common
 	        )

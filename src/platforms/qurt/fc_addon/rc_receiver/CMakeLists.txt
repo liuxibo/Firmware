@@ -56,7 +56,7 @@ if ("$ENV{EAGLE_DRIVERS_SRC}" STREQUAL "")
 	px4_add_module(
 	        MODULE platforms__qurt__fc_addon__rc_receiver
 	        MAIN rc_receiver
-	STACK_MAIN 1200
+		STACK 1200
 	        COMPILE_FLAGS
 	                -Os -Weffc++
 	        SRCS

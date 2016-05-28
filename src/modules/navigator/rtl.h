@@ -81,15 +81,19 @@ private:
 		RTL_STATE_NONE = 0,
 		RTL_STATE_CLIMB,
 		RTL_STATE_RETURN,
+		RTL_STATE_TRANSITION_TO_MC,
 		RTL_STATE_DESCEND,
 		RTL_STATE_LOITER,
 		RTL_STATE_LAND,
 		RTL_STATE_LANDED,
 	} _rtl_state;
 
+	bool _rtl_start_lock;
+
 	control::BlockParamFloat _param_return_alt;
 	control::BlockParamFloat _param_descend_alt;
 	control::BlockParamFloat _param_land_delay;
+	control::BlockParamFloat _param_rtl_min_dist;
 };
 
 #endif

@@ -30,41 +30,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+
 #include "px4muorb.hpp"
-#include "qurt.h"
 #include "uORBFastRpcChannel.hpp"
 #include "uORBManager.hpp"
 
 #include <px4_middleware.h>
 #include <px4_tasks.h>
 #include <px4_posix.h>
-#include <map>
-#include <string>
+#include <dspal_platform.h>
 #include "px4_log.h"
 #include "uORB/topics/sensor_combined.h"
 #include "uORB.h"
 
-#include "HAP_power.h"
-
-#define _ENABLE_MUORB 1
-
-extern "C" {
-int dspal_main(int argc, const char *argv[]);
-};
-
+__BEGIN_DECLS
+extern int dspal_main(int argc, char *argv[]);
+__END_DECLS
 
 int px4muorb_orb_initialize()
 {
-	int rc = 0;
-	PX4_WARN("Before calling dspal_entry() method...");
 	HAP_power_request(100, 100, 1000);
-	// register the fastrpc muorb with uORBManager.
+
+	// The uORB Manager needs to be initialized first up, otherwise the instance is nullptr.
+	uORB::Manager::initialize();
+	// Register the fastrpc muorb with uORBManager.
 	uORB::Manager::get_instance()->set_uorb_communicator(uORB::FastRpcChannel::GetInstance());
-	const char *argv[2] = { "dspal", "start" };
+
+	// Now continue with the usual dspal startup.
+	const char *argv[] = {"dspal", "start"};
 	int argc = 2;
-	dspal_main(argc, argv);
-	PX4_WARN("After calling dspal_entry");
+	int rc;
+	rc = dspal_main(argc, (char **)argv);
+
 	return rc;
+}
+
+int px4muorb_set_absolute_time_offset(int32_t time_diff_us)
+{
+	return hrt_set_absolute_time_offset(time_diff_us);
+}
+
+int px4muorb_get_absolute_time(uint64_t *time_us)
+{
+	*time_us = hrt_absolute_time();
+	return 0;
 }
 
 int px4muorb_add_subscriber(const char *name)
@@ -103,7 +112,6 @@ int px4muorb_remove_subscriber(const char *name)
 	}
 
 	return rc;
-
 }
 
 int px4muorb_send_topic_data(const char *name, const uint8_t *data, int data_len_in_bytes)

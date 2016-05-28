@@ -223,6 +223,7 @@
 #error PWMIN_TIMER_CHANNEL must be either 1 and 2.
 #endif
 
+// XXX refactor this out of this driver
 #define TIMEOUT_POLL 300000 /* reset after no response over this time in microseconds [0.3s] */
 #define TIMEOUT_READ 200000 /* don't reset if the last read is back more than this time in microseconds [0.2s] */
 
@@ -302,6 +303,7 @@ PWMIN::init()
 	CDev::init();
 
 	_reports = new ringbuffer::RingBuffer(2, sizeof(struct pwm_input_s));
+
 	if (_reports == nullptr) {
 		return -ENOMEM;
 	}
@@ -323,6 +325,8 @@ void PWMIN::_timer_init(void)
 
 	/* configure input pin */
 	stm32_configgpio(GPIO_PWM_IN);
+
+	// XXX refactor this out of this driver
 	/* configure reset pin */
 	stm32_configgpio(GPIO_VDD_RANGEFINDER_EN);
 
@@ -374,6 +378,7 @@ void PWMIN::_timer_init(void)
 	_timer_started = true;
 }
 
+// XXX refactor this out of this driver
 void
 PWMIN::_freeze_test()
 {
@@ -383,18 +388,21 @@ PWMIN::_freeze_test()
 	}
 }
 
+// XXX refactor this out of this driver
 void
 PWMIN::_turn_on()
 {
 	stm32_gpiowrite(GPIO_VDD_RANGEFINDER_EN, 1);
 }
 
+// XXX refactor this out of this driver
 void
 PWMIN::_turn_off()
 {
 	stm32_gpiowrite(GPIO_VDD_RANGEFINDER_EN, 0);
 }
 
+// XXX refactor this out of this driver
 void
 PWMIN::hard_reset()
 {
@@ -490,6 +498,7 @@ PWMIN::read(struct file *filp, char *buffer, size_t buflen)
 			buf++;
 		}
 	}
+
 	/* if there was no data, warn the caller */
 	return ret ? ret : -EAGAIN;
 }
@@ -534,7 +543,7 @@ void PWMIN::print_info(void)
 
 
 /*
- * Handle the interupt, gathering pulse data
+ * Handle the interrupt, gathering pulse data
  */
 static int pwmin_tim_isr(int irq, void *context)
 {
@@ -597,6 +606,10 @@ static void pwmin_test(void)
 			       (unsigned)buf.period,
 			       (unsigned)buf.pulse_width,
 			       (unsigned)buf.error_count);
+
+		} else {
+			/* no data, retry in 2 ms */
+			::usleep(2000);
 		}
 	}
 

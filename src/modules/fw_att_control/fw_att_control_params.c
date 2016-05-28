@@ -40,31 +40,46 @@
  * @author Thomas Gubler <thomas@px4.io>
  */
 
-#include <px4_config.h>
-
-#include <systemlib/param/param.h>
-
-
 /*
  * Controller parameters, accessible via MAVLink
  *
  */
 
 /**
- * Attitude Time Constant
+ * Attitude Roll Time Constant
  *
- * This defines the latency between a step input and the achieved setpoint
+ * This defines the latency between a roll step input and the achieved setpoint
  * (inverse to a P gain). Half a second is a good start value and fits for
  * most average systems. Smaller systems may require smaller values, but as
  * this will wear out servos faster, the value should only be decreased as
  * needed.
  *
- * @unit seconds
+ * @unit s
  * @min 0.4
  * @max 1.0
+ * @decimal 2
+ * @increment 0.05
  * @group FW Attitude Control
  */
-PARAM_DEFINE_FLOAT(FW_ATT_TC, 0.4f);
+PARAM_DEFINE_FLOAT(FW_R_TC, 0.4f);
+
+/**
+ * Attitude Pitch Time Constant
+ *
+ * This defines the latency between a pitch step input and the achieved setpoint
+ * (inverse to a P gain). Half a second is a good start value and fits for
+ * most average systems. Smaller systems may require smaller values, but as
+ * this will wear out servos faster, the value should only be decreased as
+ * needed.
+ *
+ * @unit s
+ * @min 0.2
+ * @max 1.0
+ * @decimal 2
+ * @increment 0.05
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_P_TC, 0.4f);
 
 /**
  * Pitch rate proportional gain.
@@ -72,8 +87,11 @@ PARAM_DEFINE_FLOAT(FW_ATT_TC, 0.4f);
  * This defines how much the elevator input will be commanded depending on the
  * current body angular rate error.
  *
+ * @unit %/rad/s
  * @min 0.005
  * @max 1.0
+ * @decimal 3
+ * @increment 0.005
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_PR_P, 0.08f);
@@ -84,8 +102,11 @@ PARAM_DEFINE_FLOAT(FW_PR_P, 0.08f);
  * This gain defines how much control response will result out of a steady
  * state error. It trims any constant error.
  *
+ * @unit %/rad
  * @min 0.005
  * @max 0.5
+ * @decimal 3
+ * @increment 0.005
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_PR_I, 0.02f);
@@ -99,6 +120,8 @@ PARAM_DEFINE_FLOAT(FW_PR_I, 0.02f);
  * @unit deg/s
  * @min 0.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_P_RMAX_POS, 60.0f);
@@ -112,6 +135,8 @@ PARAM_DEFINE_FLOAT(FW_P_RMAX_POS, 60.0f);
  * @unit deg/s
  * @min 0.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_P_RMAX_NEG, 60.0f);
@@ -124,6 +149,8 @@ PARAM_DEFINE_FLOAT(FW_P_RMAX_NEG, 60.0f);
  *
  * @min 0.0
  * @max 1.0
+ * @decimal 2
+ * @increment 0.05
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_PR_IMAX, 0.4f);
@@ -134,8 +161,11 @@ PARAM_DEFINE_FLOAT(FW_PR_IMAX, 0.4f);
  * This defines how much the aileron input will be commanded depending on the
  * current body angular rate error.
  *
+ * @unit %/rad/s
  * @min 0.005
  * @max 1.0
+ * @decimal 3
+ * @increment 0.005
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_RR_P, 0.05f);
@@ -146,8 +176,11 @@ PARAM_DEFINE_FLOAT(FW_RR_P, 0.05f);
  * This gain defines how much control response will result out of a steady
  * state error. It trims any constant error.
  *
+ * @unit %/rad
  * @min 0.005
  * @max 0.2
+ * @decimal 3
+ * @increment 0.005
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_RR_I, 0.01f);
@@ -159,6 +192,8 @@ PARAM_DEFINE_FLOAT(FW_RR_I, 0.01f);
  *
  * @min 0.0
  * @max 1.0
+ * @decimal 2
+ * @increment 0.05
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_RR_IMAX, 0.2f);
@@ -172,6 +207,8 @@ PARAM_DEFINE_FLOAT(FW_RR_IMAX, 0.2f);
  * @unit deg/s
  * @min 0.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_R_RMAX, 70.0f);
@@ -182,8 +219,11 @@ PARAM_DEFINE_FLOAT(FW_R_RMAX, 70.0f);
  * This defines how much the rudder input will be commanded depending on the
  * current body angular rate error.
  *
+ * @unit %/rad/s
  * @min 0.005
  * @max 1.0
+ * @decimal 3
+ * @increment 0.005
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_YR_P, 0.05f);
@@ -194,8 +234,11 @@ PARAM_DEFINE_FLOAT(FW_YR_P, 0.05f);
  * This gain defines how much control response will result out of a steady
  * state error. It trims any constant error.
  *
+ * @unit %/rad
  * @min 0.0
  * @max 50.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_YR_I, 0.0f);
@@ -208,6 +251,8 @@ PARAM_DEFINE_FLOAT(FW_YR_I, 0.0f);
  *
  * @min 0.0
  * @max 1.0
+ * @decimal 2
+ * @increment 0.05
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_YR_IMAX, 0.2f);
@@ -221,9 +266,70 @@ PARAM_DEFINE_FLOAT(FW_YR_IMAX, 0.2f);
  * @unit deg/s
  * @min 0.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_Y_RMAX, 0.0f);
+
+/**
+ * Wheel steering rate proportional gain
+ *
+ * This defines how much the wheel steering input will be commanded depending on the
+ * current body angular rate error.
+ *
+ * @unit %/rad/s
+ * @min 0.005
+ * @max 1.0
+ * @decimal 3
+ * @increment 0.005
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_WR_P, 0.5f);
+
+/**
+ * Wheel steering rate integrator gain
+ *
+ * This gain defines how much control response will result out of a steady
+ * state error. It trims any constant error.
+ *
+ * @unit %/rad
+ * @min 0.005
+ * @max 0.5
+ * @decimal 3
+ * @increment 0.005
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_WR_I, 0.1f);
+
+/**
+ * Wheel steering rate integrator limit
+ *
+ * The portion of the integrator part in the control surface deflection is
+ * limited to this value
+ *
+ * @min 0.0
+ * @max 1.0
+ * @decimal 2
+ * @increment 0.05
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_WR_IMAX, 1.0f);
+
+/**
+ * Maximum wheel steering rate
+ *
+ * This limits the maximum wheel steering rate the controller will output (in degrees per
+ * second). Setting a value of zero disables the limit.
+ *
+ * @unit deg/s
+ * @min 0.0
+ * @max 90.0
+ * @decimal 1
+ * @increment 0.5
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_W_RMAX, 0.0f);
 
 /**
  * Roll rate feed forward
@@ -232,8 +338,11 @@ PARAM_DEFINE_FLOAT(FW_Y_RMAX, 0.0f);
  * to obtain a tigher response of the controller without introducing
  * noise amplification.
  *
+ * @unit %/rad/s
  * @min 0.0
  * @max 10.0
+ * @decimal 2
+ * @increment 0.05
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_RR_FF, 0.5f);
@@ -243,8 +352,11 @@ PARAM_DEFINE_FLOAT(FW_RR_FF, 0.5f);
  *
  * Direct feed forward from rate setpoint to control surface output
  *
+ * @unit %/rad/s
  * @min 0.0
  * @max 10.0
+ * @decimal 2
+ * @increment 0.05
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_PR_FF, 0.5f);
@@ -254,11 +366,28 @@ PARAM_DEFINE_FLOAT(FW_PR_FF, 0.5f);
  *
  * Direct feed forward from rate setpoint to control surface output
  *
+ * @unit %/rad/s
  * @min 0.0
  * @max 10.0
+ * @decimal 2
+ * @increment 0.05
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_YR_FF, 0.3f);
+
+/**
+ * Wheel steering rate feed forward
+ *
+ * Direct feed forward from rate setpoint to control surface output
+ *
+ * @unit %/rad/s
+ * @min 0.0
+ * @max 10.0
+ * @decimal 2
+ * @increment 0.05
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_WR_FF, 0.2f);
 
 /**
  * Minimal speed for yaw coordination
@@ -267,6 +396,10 @@ PARAM_DEFINE_FLOAT(FW_YR_FF, 0.3f);
  * turn. Set to a very high value to disable.
  *
  * @unit m/s
+ * @min 0.0
+ * @max 1000.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_YCO_VMIN, 1000.0f);
@@ -280,53 +413,11 @@ PARAM_DEFINE_FLOAT(FW_YCO_VMIN, 1000.0f);
  *
  * @min 0
  * @max 1
- * @unit m/s
+ * @value 0 open-loop
+ * @value 1 closed-loop
  * @group FW Attitude Control
  */
 PARAM_DEFINE_INT32(FW_YCO_METHOD, 0);
-
-/* Airspeed parameters:
- * The following parameters about airspeed are used by the attitude and the
- * position controller.
- * */
-
-/**
- * Minimum Airspeed
- *
- * If the airspeed falls below this value, the TECS controller will try to
- * increase airspeed more aggressively.
- *
- * @unit m/s
- * @min 0.0
- * @max 40
- * @group FW Attitude Control
- */
-PARAM_DEFINE_FLOAT(FW_AIRSPD_MIN, 10.0f);
-
-/**
- * Trim Airspeed
- *
- * The TECS controller tries to fly at this airspeed.
- *
- * @unit m/s
- * @min 0.0
- * @max 40
- * @group FW Attitude Control
- */
-PARAM_DEFINE_FLOAT(FW_AIRSPD_TRIM, 15.0f);
-
-/**
- * Maximum Airspeed
- *
- * If the airspeed is above this value, the TECS controller will try to decrease
- * airspeed more aggressively.
- *
- * @unit m/s
- * @min 0.0
- * @max 40
- * @group FW Attitude Control
- */
-PARAM_DEFINE_FLOAT(FW_AIRSPD_MAX, 20.0f);
 
 /**
  * Roll Setpoint Offset
@@ -338,6 +429,8 @@ PARAM_DEFINE_FLOAT(FW_AIRSPD_MAX, 20.0f);
  * @unit deg
  * @min -90.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_RSP_OFF, 0.0f);
@@ -352,6 +445,8 @@ PARAM_DEFINE_FLOAT(FW_RSP_OFF, 0.0f);
  * @unit deg
  * @min -90.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_PSP_OFF, 0.0f);
@@ -364,6 +459,8 @@ PARAM_DEFINE_FLOAT(FW_PSP_OFF, 0.0f);
  * @unit deg
  * @min 0.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_MAN_R_MAX, 45.0f);
@@ -376,6 +473,32 @@ PARAM_DEFINE_FLOAT(FW_MAN_R_MAX, 45.0f);
  * @unit deg
  * @min 0.0
  * @max 90.0
+ * @decimal 1
+ * @increment 0.5
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_MAN_P_MAX, 45.0f);
+
+/**
+ * Scale factor for flaps
+ *
+ * @unit norm
+ * @min 0.0
+ * @max 1.0
+ * @decimal 2
+ * @increment 0.01
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_FLAPS_SCL, 1.0f);
+
+/**
+ * Scale factor for flaperons
+ *
+ * @unit norm
+ * @min 0.0
+ * @max 1.0
+ * @decimal 2
+ * @increment 0.01
+ * @group FW Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_FLAPERON_SCL, 0.0f);

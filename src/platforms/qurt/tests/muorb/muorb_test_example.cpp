@@ -45,7 +45,7 @@
 #include <string.h>
 #include "uORB/topics/sensor_combined.h"
 #include "uORB/topics/pwm_input.h"
-#include "uORB.h"
+#include "modules/uORB/uORB.h"
 #include "px4_middleware.h"
 #include "px4_defines.h"
 #include <stdlib.h>
@@ -88,7 +88,7 @@ int MuorbTestExample::DefaultTest()
 
 	int i = 0;
 	pwm.error_count++;
-	sc.gyro_errcount++;
+	sc.gyro_errcount[i]++;
 
 	while (!appState.exitRequested() && i < 10) {
 

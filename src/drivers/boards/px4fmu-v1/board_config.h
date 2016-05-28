@@ -182,6 +182,13 @@ __BEGIN_DECLS
 #define GPIO_TIM2_CH2OUT	GPIO_TIM2_CH2OUT_1
 #define GPIO_TIM2_CH3OUT	GPIO_TIM2_CH3OUT_1
 #define GPIO_TIM2_CH4OUT	GPIO_TIM2_CH4OUT_1
+#define DIRECT_PWM_OUTPUT_CHANNELS	4
+
+#define GPIO_TIM2_CH1IN		GPIO_TIM2_CH1IN_1
+#define GPIO_TIM2_CH2IN		GPIO_TIM2_CH2IN_1
+#define GPIO_TIM2_CH3IN		GPIO_TIM2_CH3IN_1
+#define GPIO_TIM2_CH4IN		GPIO_TIM2_CH4IN_1
+#define DIRECT_INPUT_TIMER_CHANNELS  4
 
 /* USB OTG FS
  *
@@ -195,6 +202,9 @@ __BEGIN_DECLS
 #define HRT_TIMER_CHANNEL	1	/* use capture/compare channel */
 #define HRT_PPM_CHANNEL		3	/* use capture/compare channel 3 */
 #define GPIO_PPM_IN		(GPIO_ALT|GPIO_AF1|GPIO_PULLUP|GPIO_PORTA|GPIO_PIN10)
+
+
+#define	BOARD_NAME "PX4FMU_V1"
 
 /****************************************************************************************************
  * Public Types

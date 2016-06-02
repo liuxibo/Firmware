@@ -155,9 +155,6 @@ px4-stm32f4discovery_default:
 px4fmu-v2_ekf2:
 	$(call cmake-build,nuttx_px4fmu-v2_ekf2)
 
-px4fmu-v2_lpe:
-	$(call cmake-build,nuttx_px4fmu-v2_lpe)
-
 mindpx-v2_default:
 	$(call cmake-build,nuttx_mindpx-v2_default)
 
@@ -208,6 +205,9 @@ posix_rpi2_default:
 posix_rpi2_release:
 	$(call cmake-build,$@)
 
+posix_bebop_default:
+	$(call cmake-build,$@)
+
 posix: posix_sitl_default
 
 broadcast: posix_sitl_broadcast
@@ -251,7 +251,6 @@ checks_tests: \
 	check_px4fmu-v2_test
 
 checks_alts: \
-	check_px4fmu-v2_lpe \
 	check_px4fmu-v2_ekf2 \
 
 checks_uavcan: \

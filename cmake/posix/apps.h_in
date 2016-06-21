@@ -20,6 +20,7 @@ static int list_files_main(int argc, char *argv[]);
 static int list_devices_main(int argc, char *argv[]);
 static int list_topics_main(int argc, char *argv[]);
 static int sleep_main(int argc, char *argv[]);
+static int wait_for_topic(int argc, char *argv[]);
 }
 
 static map<string,px4_main_t> app_map(void)
@@ -33,6 +34,7 @@ ${builtin_apps_string}
 	apps["list_devices"] = list_devices_main;
 	apps["list_topics"] = list_topics_main;
 	apps["sleep"] = sleep_main;
+	apps["wait_for_topic"] = wait_for_topic;
 
 	return apps;
 }
@@ -84,5 +86,30 @@ static int sleep_main(int argc, char *argv[])
 	}
 	sleep(atoi(argv[1]));
 	return 0;
+}
+
+#include "uORB/uORB.h"
+
+static int wait_for_topic(int argc, char *argv[])
+{
+	if (argc != 2) {
+		cout << "Usage: wait_for_topic <topic>" << endl;
+		return 1;
+	}
+
+	cout << "Waiting for topic " << argv[1] << endl;
+
+	struct orb_metadata meta = { .o_name = argv[1],
+				     .o_size = 0,
+				     .o_size_no_padding = 0,
+				     .o_fields = nullptr };
+
+	while (orb_exists(&meta, 0) != 0)
+	{
+		sleep(1);
+	}
+
+	return 0;
+
 }
 

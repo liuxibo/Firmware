@@ -40,8 +40,17 @@ public:
 	/**
 	 * The minimum duration between successive pulses on a given GPIO line, or between GPIO lines.
 	 */
-	const uint32_t MINIMUM_PULSE_WIDTH_IN_USECS = 20;
+	const uint32_t MINIMUM_PULSE_WIDTH_DELTA_IN_USECS = 20;
 
+	/**
+	 * The device path used for this particular PWM interface.
+	 */
+	const char DEVICE_PATH[] = "/dev/pwm-1";
+
+	/**
+	 * Retrieve the singleton reference to this class.
+	 * @return
+	 */
 	static PwmEsc* get_instance();
 
 	/**
@@ -84,14 +93,19 @@ public:
 
 	/**
 	 * Scale the specified motor RPM's to PWM settings.
-	 * @param rpms
-	 * The desired motor RPM of each motor, in order from motor 1 to motor n. The specified
-	 * RPM is scaled within the minimum and maximum pulse width defined in initialize().
-	 * @param num_esc
+	 * @param outputs
+	 * The desired motor output (ranging from -1 to 1), in order from motor 1 to motor n. The
+	 * specified RPM is scaled within the minimum and maximum pulse width defined in initialize().
+	 * @param num_escs
 	 * The number of motors referenced in the rpms parameter.
 	 */
-	int set(int16_t *rpms, int num_esc);
+	int set(int16_t *outputs, int num_escs);
 
 private:
 	static PwmEsc *_instance;
+	static bool _initialized;
+	int _fd;
+	struct dspal_pwm_ioctl_update_buffer *_update_buffer;
+	uint32_t _minimum_pulse_width_in_usecs;
+	uint32_t _maximum_pulse_width_in_usecs;
 };

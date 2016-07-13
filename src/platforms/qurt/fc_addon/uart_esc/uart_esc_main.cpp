@@ -377,7 +377,7 @@ void task_main(int argc, char *argv[])
 				}
 
 #ifdef QURT_PWM_TESTING
-				pwm_esc->set(&motor_rpms[0], _outputs.noutputs);
+				pwm_esc->set(&_outputs.output[0], _outputs.noutputs);
 #else
 				esc->send_rpms(&motor_rpms[0], _outputs.noutputs);
 #endif

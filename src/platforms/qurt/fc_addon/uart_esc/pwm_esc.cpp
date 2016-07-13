@@ -47,6 +47,11 @@ PwmEsc* PwmEsc::get_instance()
 	return _instance;
 }
 
-// TODO-JYW: LEFT-OFF: Implement and push this class to the feature branch.
+int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
+		uint32_t num_gpio_ids, uint32_t min_pulse_width_in_usecs = 0,
+		uint32_t max_pulse_width_in_usecs = 0)
+{
+
+}
 
 

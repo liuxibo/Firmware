@@ -57,6 +57,7 @@ px4_add_module(
         SRCS
                 uart_esc_main.cpp
 		uart_esc_params.c
+		pwm_esc.cpp
 
         DEPENDS
                 platforms__common

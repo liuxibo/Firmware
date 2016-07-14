@@ -280,6 +280,16 @@ void task_main(int argc, char *argv[])
 
 	parameters_init();
 
+#ifdef QURT_PWM_TESTING
+	pwm_esc = PwmEsc::get_instance();
+
+	if (pwm_esc == NULL) {
+		PX4_ERR("failed to new UartEsc instance");
+
+	} else if (pwm_esc->initialize() != 0) {
+		PX4_ERR("unable to open PWM device");
+	}
+#else
 	esc = UartEsc::get_instance();
 
 	if (esc == NULL) {
@@ -288,7 +298,7 @@ void task_main(int argc, char *argv[])
 	} else if (esc->initialize((enum esc_model_t)_parameters.model,
 				   _device, _parameters.baudrate) < 0) {
 		PX4_ERR("failed to initialize UartEsc");
-
+#endif
 	} else {
 		// Subscribe for orb topics
 		_controls_sub = orb_subscribe(ORB_ID(actuator_controls_0)); // single group for now
@@ -366,7 +376,11 @@ void task_main(int argc, char *argv[])
 					}
 				}
 
+#ifdef QURT_PWM_TESTING
+				pwm_esc->set(&_outputs.output[0], _outputs.noutputs);
+#else
 				esc->send_rpms(&motor_rpms[0], _outputs.noutputs);
+#endif
 
 				// TODO-JYW: TESTING-TESTING
 				// MAINTAIN FOR REFERENCE, COMMENT OUT FOR RELEASE BUILDS
@@ -410,9 +424,15 @@ void task_main(int argc, char *argv[])
 		}
 	}
 
-	PX4_WARN("closing uart_esc");
+#ifdef QURT_PWM_TEST
+	delete pwm_esc;
 
+	PX4_WARN("closing pwm esc");
+#else
 	delete esc;
+
+	PX4_WARN("closing uart_esc");
+#endif
 }
 
 /** uart_esc main entrance */

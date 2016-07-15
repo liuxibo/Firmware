@@ -45,7 +45,7 @@ public:
 	/**
 	 * The device path used for this particular PWM interface.
 	 */
-	const char DEVICE_PATH[] = "/dev/pwm-1";
+	static char DEVICE_PATH[];
 
 	/**
 	 * Retrieve the singleton reference to this class.
@@ -99,7 +99,7 @@ public:
 	 * @param num_escs
 	 * The number of motors referenced in the rpms parameter.
 	 */
-	int set(int16_t *outputs, int num_escs);
+	int set(float *outputs, int num_escs);
 
 private:
 	static PwmEsc *_instance;

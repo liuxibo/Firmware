@@ -31,6 +31,9 @@
 *
 ****************************************************************************/
 
+// TODO-JYW: TESTING-TESTING
+#define QURT_PWM_TESTING
+
 #include <stdint.h>
 
 #include <px4_tasks.h>
@@ -49,6 +52,10 @@
 #include <systemlib/mixer/mixer.h>
 #include <systemlib/mixer/mixer_multirotor.generated.h>
 #include <systemlib/param/param.h>
+
+#ifdef QURT_PWM_TESTING
+#include "pwm_esc.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,6 +79,9 @@ static char _device[MAX_LEN_DEV_PATH];
 static bool _is_running = false;         // flag indicating if uart_esc app is running
 static px4_task_t _task_handle = -1;     // handle to the task main thread
 UartEsc *esc;                            // esc instance
+#ifdef QURT_PWM_TESTING
+PwmEsc *pwm_esc;
+#endif
 void uart_esc_rotate_motors(int16_t *motor_rpm, int num_rotors); // motor re-mapping
 
 // subscriptions
@@ -282,13 +292,13 @@ void task_main(int argc, char *argv[])
 
 #ifdef QURT_PWM_TESTING
 	pwm_esc = PwmEsc::get_instance();
+	uint32_t gpio_ids[] = {5,4,30,29};
 
 	if (pwm_esc == NULL) {
 		PX4_ERR("failed to new UartEsc instance");
 
-	} else if (pwm_esc->initialize() != 0) {
+	} else if (pwm_esc->initialize(2000, &gpio_ids[0], sizeof(gpio_ids), 1050, 2000) != 0) {
 		PX4_ERR("unable to open PWM device");
-	}
 #else
 	esc = UartEsc::get_instance();
 

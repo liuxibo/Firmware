@@ -32,7 +32,12 @@
 ****************************************************************************/
 
 #include <fcntl.h>
+#include <stdint.h>
 #include <dev_fs_lib_pwm.h>
+#include <px4_defines.h>
+#include <px4_posix.h>
+#include <sys/ioctl.h>
+
 #include "pwm_esc.h"
 
 // TODO-JYW: LEFT-OFF: Verify that uart_esc_main.cpp is correctly using this new class and
@@ -40,11 +45,14 @@
 
 // singleton instance variable initialization
 PwmEsc* PwmEsc::_instance = NULL;
-PwmEsc* PwmEsc::_initialized = false;
+bool PwmEsc::_initialized = false;
+
+// static initializers
+char PwmEsc::DEVICE_PATH[] = "/dev/pwm-1";
 
 PwmEsc* PwmEsc::get_instance()
 {
-	FARF(MEDIUM, "PwmEsc::get_instance() called");
+	PX4_INFO("PwmEsc::get_instance() called");
 
 	if (_instance == NULL) {
 		_instance = new PwmEsc();
@@ -62,11 +70,11 @@ PwmEsc::~PwmEsc()
 }
 
 int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
-		uint32_t num_gpio_ids, uint32_t min_pulse_width_in_usecs = 0,
-		uint32_t max_pulse_width_in_usecs = 0)
+		uint32_t num_gpio_ids, uint32_t min_pulse_width_in_usecs,
+		uint32_t max_pulse_width_in_usecs)
 {
 	if (_initialized) {
-		FARF(HIGH, "PwmEsc is already initialized.");
+		PX4_ERR("PwmEsc is already initialized.");
 		return -1;
 	}
 
@@ -96,14 +104,14 @@ int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
 		signal_definition.pwm_signal = &pwm_gpio[0];
 
 		// Send the signal definition to the DSP.
-		if (ioctl(fd, PWM_IOCTL_SIGNAL_DEFINITION, &signal_definition) != 0) {
-			return_value = ERROR;
+		if (ioctl(_fd, PWM_IOCTL_SIGNAL_DEFINITION, &signal_definition) != 0) {
+			return_value = -1;
 		}
 
 		// Retrieve the shared buffer which will be used below to update the desired
 		// pulse width.
-		if (ioctl(fd, PWM_IOCTL_GET_UPDATE_BUFFER, &_update_buffer) != 0) {
-			return_value = ERROR;
+		if (ioctl(_fd, PWM_IOCTL_GET_UPDATE_BUFFER, &_update_buffer) != 0) {
+			return_value = -1;
 		}
 
 		// Save the values min/max PWM values specified.
@@ -118,7 +126,7 @@ int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
 	return return_value;
 }
 
-int PwmEsc::set(int16_t *outputs, int num_escs)
+int PwmEsc::set(float *outputs, int num_escs)
 {
 	if (!_initialized) {
 		return -1;

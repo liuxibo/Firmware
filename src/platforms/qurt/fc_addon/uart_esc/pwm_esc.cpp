@@ -40,8 +40,11 @@
 
 #include "pwm_esc.h"
 
-// TODO-JYW: LEFT-OFF: Verify that uart_esc_main.cpp is correctly using this new class and
-// then rebuild/retest.
+// Function implemented in uart_esc_main.c
+namespace uart_esc
+{
+	extern void uart_esc_rotate_motors(int16_t *motor_rpm, int num_rotors); // motor re-mapping
+};
 
 // singleton instance variable initialization
 PwmEsc* PwmEsc::_instance = NULL;
@@ -63,6 +66,8 @@ PwmEsc* PwmEsc::get_instance()
 
 PwmEsc::~PwmEsc()
 {
+	PX4_INFO("PwmEsc:~PwmEsc called");
+
 	if (_initialized) {
 		close(_fd);
 		_initialized = false;
@@ -73,6 +78,8 @@ int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
 		uint32_t num_gpio_ids, uint32_t min_pulse_width_in_usecs,
 		uint32_t max_pulse_width_in_usecs)
 {
+	PX4_INFO("PwmEsc::initialize being called.");
+
 	if (_initialized) {
 		PX4_ERR("PwmEsc is already initialized.");
 		return -1;
@@ -96,6 +103,8 @@ int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
 			// Use the minimum pulse width as the starting pulse to arm the
 			// motor.
 			pwm_gpio[gpio_index].pulse_width_in_usecs = min_pulse_width_in_usecs;
+			PX4_INFO("PwmEsc::initialize: Defining pulse width: ID: %d, width: %d",
+					pwm_gpio[gpio_index].gpio_id, pwm_gpio[gpio_index].pulse_width_in_usecs);
 		}
 
 		// Describe the overall signal and reference the above array.
@@ -105,12 +114,14 @@ int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
 
 		// Send the signal definition to the DSP.
 		if (ioctl(_fd, PWM_IOCTL_SIGNAL_DEFINITION, &signal_definition) != 0) {
+			PX4_ERR("PwmEsc::initialize signal definition error");
 			return_value = -1;
 		}
 
 		// Retrieve the shared buffer which will be used below to update the desired
 		// pulse width.
 		if (ioctl(_fd, PWM_IOCTL_GET_UPDATE_BUFFER, &_update_buffer) != 0) {
+			PX4_ERR("PwmEsc::initialize get update buffer");
 			return_value = -1;
 		}
 
@@ -121,6 +132,11 @@ int PwmEsc::initialize(uint32_t period_in_usecs, uint32_t *gpio_ids,
 
 	if (return_value == 0) {
 		_initialized = true;
+		PX4_INFO("PwmEsc::initialize successful.");
+	}
+	else
+	{
+		PX4_ERR("PwmEsc::initialize error");
 	}
 
 	return return_value;
@@ -132,12 +148,17 @@ int PwmEsc::set(float *outputs, int num_escs)
 		return -1;
 	}
 
+	int16_t pulses[num_escs];
 	int pulse_with_range_in_usecs = _maximum_pulse_width_in_usecs - _minimum_pulse_width_in_usecs;
 
 	for (int esc_index = 0; esc_index < num_escs; esc_index++) {
-		_update_buffer->pwm_signal[esc_index].pulse_width_in_usecs =
-				_minimum_pulse_width_in_usecs +
+		pulses[esc_index] =_minimum_pulse_width_in_usecs +
 				(uint32_t)((float)pulse_with_range_in_usecs * ((outputs[esc_index] + 1.0) / 2.0));
+	}
+	uart_esc::uart_esc_rotate_motors(&pulses[0], num_escs);
+
+	for (int esc_index = 0; esc_index < num_escs; esc_index++) {
+		_update_buffer->pwm_signal[esc_index].pulse_width_in_usecs = pulses[esc_index];
 	}
 
 	return 0;

@@ -58,7 +58,12 @@ public:
 	 * the actual intiialization work that needs to be done before operating
 	 * the ESCs.
 	 */
-	PwmEsc();
+	PwmEsc() :
+		_fd(-1),
+		_update_buffer(nullptr),
+		_minimum_pulse_width_in_usecs(0),
+		_maximum_pulse_width_in_usecs(0)
+	{ };
 
 	/**
 	 * Configure the PWM signal and specify the GPIO lines to be used to generate

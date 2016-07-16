@@ -297,7 +297,8 @@ void task_main(int argc, char *argv[])
 	if (pwm_esc == NULL) {
 		PX4_ERR("failed to new UartEsc instance");
 
-	} else if (pwm_esc->initialize(2000, &gpio_ids[0], sizeof(gpio_ids), 1050, 2000) != 0) {
+	} else if (pwm_esc->initialize(2000, &gpio_ids[0], sizeof(gpio_ids) / sizeof(uint32_t),
+			1050, 2000) != 0) {
 		PX4_ERR("unable to open PWM device");
 #else
 	esc = UartEsc::get_instance();
@@ -336,12 +337,16 @@ void task_main(int argc, char *argv[])
 
 			/* timed out - periodic check for _task_should_exit */
 			if (pret == 0) {
+				// TODO-JYW: TESTING-TESTING
+				PX4_INFO("Timed out waiting for actuator controls.");
 				continue;
 			}
 
 			/* this is undesirable but not much we can do - might want to flag unhappy status */
 			if (pret < 0) {
-				PX4_WARN("poll error %d, %d", pret, errno);
+				// TODO-JYW: TESTING-TESTING
+				PX4_INFO("poll error %d, %d", pret, errno);
+				//				PX4_WARN("poll error %d, %d", pret, errno);
 				/* sleep a bit before next try */
 				usleep(100000);
 				continue;
@@ -368,6 +373,7 @@ void task_main(int argc, char *argv[])
 						continue;
 					}
 
+#ifndef QURT_PWM_TESTING
 					// Send outputs to the ESCs
 					for (unsigned outIdx = 0; outIdx < _outputs.noutputs; outIdx++) {
 						// map -1.0 - 1.0 outputs to RPMs
@@ -376,6 +382,7 @@ void task_main(int argc, char *argv[])
 					}
 
 					uart_esc_rotate_motors(motor_rpms, _outputs.noutputs);
+#endif
 
 				} else {
 					_outputs.noutputs = UART_ESC_MAX_MOTORS;
@@ -403,7 +410,6 @@ void task_main(int argc, char *argv[])
 //					PX4_DEBUG("Act Outputs : 0: %+8.4f, 1: %+8.4f,   2: %+8.4f, 3: %+8.4f  ",_outputs.output[0],_outputs.output[1],_outputs.output[2],_outputs.output[3]);
 //				}
 				// TODO-JYW: TESTING-TESTING
-
 
 				/* Publish mixed control outputs */
 				if (_outputs_pub != nullptr) {
@@ -434,7 +440,7 @@ void task_main(int argc, char *argv[])
 		}
 	}
 
-#ifdef QURT_PWM_TEST
+#ifdef QURT_PWM_TESTING
 	delete pwm_esc;
 
 	PX4_WARN("closing pwm esc");

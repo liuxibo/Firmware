@@ -20,6 +20,7 @@ static int list_files_main(int argc, char *argv[]);
 static int list_devices_main(int argc, char *argv[]);
 static int list_topics_main(int argc, char *argv[]);
 static int sleep_main(int argc, char *argv[]);
+static int wait_for_topic(int argc, char *argv[]);
 }
 
 
@@ -32,6 +33,7 @@ ${builtin_apps_string}
 	apps["list_devices"] = list_devices_main;
 	apps["list_topics"] = list_topics_main;
 	apps["sleep"] = sleep_main;
+	apps["wait_for_topic"] = wait_for_topic;
 }
 
 void list_builtins(map<string,px4_main_t> &apps)
@@ -77,8 +79,35 @@ static int sleep_main(int argc, char *argv[])
         }
 
         unsigned long usecs = ( (unsigned long) atol( argv[1] ) ) * 1000 * 1000;
-        PX4_WARN("Sleeping for %s, %ld",argv[1],usecs);
+        PX4_INFO("Sleeping for %s, %ld",argv[1],usecs);
         usleep( usecs );
         return 0;
 }
 
+#include "uORB/uORB.h"
+
+static int wait_for_topic(int argc, char *argv[])
+{
+	if (argc < 2 || argc > 3) {
+		PX4_WARN("Usage: wait_for_topic <topic> [timeout_sec]");
+		return 1;
+	}
+
+	struct orb_metadata meta = { .o_name = argv[1],
+				     .o_size = 0,
+				     .o_size_no_padding = 0,
+				     .o_fields = nullptr };
+
+	unsigned int timeout = (argc == 3) ? (unsigned int)atoi(argv[2]) : 0;
+	unsigned int elapsed = 0;
+
+	PX4_INFO("Waiting for topic %s timeout %u", argv[1], timeout);
+
+	while (orb_exists(&meta, 0) != 0 && (timeout && (elapsed < timeout)))
+	{
+		usleep( 1000 );
+		elapsed += 1;
+	}
+
+	return 0;
+}

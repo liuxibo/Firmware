@@ -37,6 +37,7 @@
 #include <px4_defines.h>
 #include <px4_posix.h>
 #include <sys/ioctl.h>
+#include <drivers/drv_hrt.h>
 
 #include "pwm_esc.h"
 
@@ -156,6 +157,26 @@ int PwmEsc::set(float *outputs, int num_escs)
 				(uint32_t)((float)pulse_with_range_in_usecs * ((outputs[esc_index] + 1.0) / 2.0));
 	}
 	uart_esc::uart_esc_rotate_motors(&pulses[0], num_escs);
+
+	// TODO-JYW: TESTING-TESTING: for ESC calibration
+//	static hrt_abstime start_calib_time_in_usecs;
+//	static hrt_abstime current_calib_time_in_usecs;
+//
+//	if (start_calib_time_in_usecs == 0) {
+//		start_calib_time_in_usecs = hrt_absolute_time();
+//	}
+//	current_calib_time_in_usecs = hrt_absolute_time();
+//
+//	for (int esc_index = 0; esc_index < num_escs; esc_index++) {
+//		if ((current_calib_time_in_usecs - start_calib_time_in_usecs) > 1000000 * 10) {
+//			PX4_INFO("minimum PWM set for ESC calibration");
+//			_update_buffer->pwm_signal[esc_index].pulse_width_in_usecs = _minimum_pulse_width_in_usecs;
+//		} else {
+//			PX4_INFO("maximum PWM set for ESC calibration");
+//			_update_buffer->pwm_signal[esc_index].pulse_width_in_usecs = _maximum_pulse_width_in_usecs;
+//		}
+//	}
+	// TODO-JYW: TESTING-TESTING: for ESC calibration
 
 	for (int esc_index = 0; esc_index < num_escs; esc_index++) {
 		_update_buffer->pwm_signal[esc_index].pulse_width_in_usecs = pulses[esc_index];

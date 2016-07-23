@@ -292,13 +292,13 @@ void task_main(int argc, char *argv[])
 
 #ifdef QURT_PWM_TESTING
 	pwm_esc = PwmEsc::get_instance();
-	uint32_t gpio_ids[] = {5,4,30,29};
+	uint32_t gpio_ids[] = {45,46,47,48};
 
 	if (pwm_esc == NULL) {
 		PX4_ERR("failed to new UartEsc instance");
 
 	} else if (pwm_esc->initialize(2000, &gpio_ids[0], sizeof(gpio_ids) / sizeof(uint32_t),
-			1050, 2000) != 0) {
+			1080, 1925) != 0) {
 		PX4_ERR("unable to open PWM device");
 #else
 	esc = UartEsc::get_instance();

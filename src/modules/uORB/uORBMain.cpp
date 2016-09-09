@@ -79,7 +79,7 @@ uorb_main(int argc, char *argv[])
 			return -errno;
 		}
 
-		px4_log_initialize();
+		// px4_log_initialize();
 
 		return OK;
 	}
